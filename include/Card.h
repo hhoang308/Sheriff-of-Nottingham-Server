@@ -3,6 +3,19 @@
 
 #include <string>
 
+#define CARD_SIZE 8
+
+enum class CardName {
+    Apple,
+    Cheese,
+    Chicken,
+    Bread,
+    Pepper,
+    Mead,
+    Silk,
+    Crossbow
+};
+
 enum class CardType {
     LEGAL,
     CONTRABAND

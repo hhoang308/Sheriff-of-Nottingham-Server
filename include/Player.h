@@ -34,6 +34,7 @@ public:
 
     const std::vector<Card>& getGoods() const;
     const std::vector<Card>& getHand() const;
+    /* TODO: a funtion to create instance for each player */
 
 private:
     std::string name;
