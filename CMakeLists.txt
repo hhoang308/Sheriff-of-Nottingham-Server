@@ -5,13 +5,14 @@ project(SheriffOfNottinghamServer)
 set(CMAKE_CXX_STANDARD 17)
 
 # Include project source directories
-include_directories(
-    include
-    include/Model
-    include/Controller 
-)
+include_directories(include)
 
-# Add source files for the main project
+# Find ENet
+# find_library(ENET_LIBRARY enet)
+# include_directories(/usr/local/include)
+include_directories(${PROJECT_SOURCE_DIR}/include)
+
+# Add source files
 set(SOURCES
     src/main.cpp
     src/Model/Server.cpp
