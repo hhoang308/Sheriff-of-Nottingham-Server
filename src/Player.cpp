@@ -30,29 +30,29 @@ void Player::subtractGold(int amount) {
 }
 
 // Card management implementation
-void Player::addCardToHand(const Card& card) {
+void Player::addCardToHand(const CardName card) {
     hand.push_back(card);
 }
 
-bool Player::removeCardFromHand(const Card& card) {
-    for (auto it = hand.begin(); it != hand.end(); ++it) {
-        if (it->getName() == card.getName()) {
-            hand.erase(it);
-            return true;
-        }
-    }
+bool Player::removeCardFromHand(const CardName card) {
+    // for (auto it = hand.begin(); it != hand.end(); ++it) {
+    //     if (it->getName() == card.getName()) {
+    //         hand.erase(it);
+    //         return true;
+    //     }
+    // }
     return false;
 }
 
-const std::vector<Card>& Player::getHand() const {
+const std::vector<CardName>& Player::getHand() const {
     return hand;
 }
 
-void Player::addCardToGoods(const Card& card) {
+void Player::addCardToGoods(const CardName card) {
     goods.push_back(card);
 }
 
-const std::vector<Card>& Player::getGoods() const {
+const std::vector<CardName>& Player::getGoods() const {
     return goods;
 }
 

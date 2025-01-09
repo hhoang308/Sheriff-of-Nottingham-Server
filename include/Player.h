@@ -28,20 +28,20 @@ public:
     void subtractGold(int amount);
 
     // Card management
-    void addCardToHand(const Card& card);
-    bool removeCardFromHand(const Card& card);
-    void addCardToGoods(const Card& card);
+    void addCardToHand(const CardName card);
+    bool removeCardFromHand(const CardName card);
+    void addCardToGoods(const CardName card);
 
-    const std::vector<Card>& getGoods() const;
-    const std::vector<Card>& getHand() const;
+    const std::vector<CardName>& getGoods() const;
+    const std::vector<CardName>& getHand() const;
     /* TODO: a funtion to create instance for each player */
 
 private:
     std::string name;
     Role role;
     int gold;
-    std::vector<Card> hand;
-    std::vector<Card> goods;
+    std::vector<CardName> hand;
+    std::vector<CardName> goods;
 
 };
 

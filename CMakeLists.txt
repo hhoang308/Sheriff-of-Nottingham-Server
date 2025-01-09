@@ -4,15 +4,10 @@ project(SheriffOfNottinghamServer)
 # Set the C++ standard
 set(CMAKE_CXX_STANDARD 17)
 
-# Include directories
+# Include project source directories
 include_directories(include)
 
-# Find ENet
-# find_library(ENET_LIBRARY enet)
-# include_directories(/usr/local/include)
-include_directories(${PROJECT_SOURCE_DIR}/include)
-
-# Add source files
+# Add source files for the main project
 set(SOURCES
     src/main.cpp
     src/Server.cpp
@@ -21,7 +16,10 @@ set(SOURCES
     src/Card.cpp
 )
 
-# Add executable
+# # Link the main executable with pthread and GoogleTest libraries
+# target_link_libraries(SheriffOfNottinghamServer PRIVATE GTest::GTest GTest::Main Threads::Threads)
+
+# Create the main executable (SheriffOfNottinghamServer)
 add_executable(SheriffOfNottinghamServer ${SOURCES})
 
 # Link ENet library
