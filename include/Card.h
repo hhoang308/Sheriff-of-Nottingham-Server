@@ -36,6 +36,10 @@ extern const std::unordered_map<CardName, int> cardValue;
 // Map to store card values and counts for each card type
 extern const std::unordered_map<CardName, int> cardPenalty;
 
+extern const std::unordered_map<CardName, int> bonusPointsChampion;
+
+extern const std::unordered_map<CardName, int> bonusPointRunnerUp;
+
 std::string getCardNameString(const CardName card);
 
 std::string getCardTypeString(const CardName card);

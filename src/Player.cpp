@@ -1,13 +1,13 @@
 #include "Player.h"
 
-// Constructor implementation
+/* TODO: set player color in constructor, with color format */
 Player::Player(const std::string& name, Role role)
-    : mPlayerName(name), mPlayerRole(role), mPlayerGold(50) {
+    : mPlayerName(name), mPlayerRole(role), mPlayerGold(50), mPlayerPoints(50) {
         mPlayerHand = std::vector<CardName>();
-        mPlayerGoods = std::vector<CardName>();
+        mPlayerGoods = std::unordered_map<CardName, int>();
+        mPlayerBag = std::vector<CardName>();
     }  // Assuming each player starts with 50 gold
 
-// Getters and setters implementation
 std::string Player::getName() const {
     return mPlayerName;
 }
@@ -27,6 +27,7 @@ int Player::getGold() const {
 
 bool Player::addGold(int amount) {
     mPlayerGold += amount;
+    mPlayerPoints += amount;
     return true;
 }
 
@@ -34,6 +35,7 @@ bool Player::subtractGold(int amount) {
     int currentPlayerGold = mPlayerGold - amount;
     if(currentPlayerGold >= 0){
         mPlayerGold = currentPlayerGold;
+        mPlayerPoints -= amount;
         return true;
     }else{
         printf("Can't subtract player %s %d gold, mPlayerGold is %d\n", mPlayerName.c_str(), amount, mPlayerGold);
@@ -41,7 +43,6 @@ bool Player::subtractGold(int amount) {
     }
 }
 
-// Card management implementation
 bool Player::addCardToHand(const CardName card) {
     mPlayerHand.push_back(card);
     return true;
@@ -62,11 +63,12 @@ const std::vector<CardName>& Player::getHand() const {
 }
 
 bool Player::addCardToGoods(const CardName card) {
-    mPlayerGoods.push_back(card);
+    mPlayerGoods[card]++;
+    mPlayerPoints += cardValue.at(card);
     return true;
 }
 
-const std::vector<CardName>& Player::getGoods() const {
+const std::unordered_map<CardName, int>& Player::getGoods() const {
     return mPlayerGoods;
 }
 
@@ -78,4 +80,8 @@ bool Player::setName(std::string& playerName){
 bool Player::setGold(int playerGold){
     mPlayerGold = playerGold;
     return true;
+}
+
+int Player::getPlayerPoints(){
+    return mPlayerPoints;
 }

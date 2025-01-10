@@ -51,6 +51,20 @@ const std::unordered_map<CardName, int> cardPenalty = {
     {CROSSBOW, 4}
 };
 
+const std::unordered_map<CardName, int> bonusPointsChampion = {
+    {APPLE, 20},
+    {CHEESE, 15},
+    {BREAD, 15},
+    {CHICKEN, 10},
+};
+
+const std::unordered_map<CardName, int> bonusPointRunnerUp = {
+    {APPLE, 10},
+    {CHEESE, 10},
+    {BREAD, 10},
+    {CHICKEN, 5},
+};
+
 std::string getCardNameString(const CardName card){
     return cardNameToString.at(card);
 }

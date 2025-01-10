@@ -4,6 +4,7 @@
 Game::Game(const int numberOfPlayer){
     printf("Game created!\n");
     mDeck = createAndShuffleDeck(numberOfPlayer);
+    mPlayerList = std::vector<Player*>();
     if(mDeck.empty()){
         printf("Can't create deck because of invalid size of player!\n");
     }else{
@@ -128,4 +129,43 @@ bool Game::insertPile(const CardName insertCard, const int pile){
 
 std::vector<CardName>& Game::getDeck(){
     return mDeck;
+}
+
+bool Game::insertPlayer(Player* player){
+    if(mPlayerList.size() > MAX_NUMBER_OF_PLAYER){
+        printf("Can't insert player, reached %d of player in a game", MAX_NUMBER_OF_PLAYER);
+        return false;
+    }
+    mPlayerList.emplace_back(player);
+    return true;
+}
+
+/* TODO: sort player by their collected point
+top chicken, top bread,...got bonus point, please consider this situation
+ */
+std::vector<Player*> Game::findWinner(){
+    std::vector<Player*> sortedPlayer = mPlayerList;
+
+    std::sort(sortedPlayer.begin(), sortedPlayer.end(), 
+        [](Player* lhs, Player* rhs) {
+            return lhs->getPlayerPoints() > rhs->getPlayerPoints(); 
+        }
+    );
+
+    return sortedPlayer;
+}
+
+bool Game::dealCardToEveryone(){
+    for(int i = 0; i < MAX_CARD_OF_PLAYER; i++){
+        for(auto player : mPlayerList){
+            if(!mDeck.empty()){
+                player->addCardToHand(mDeck.back());
+                mDeck.pop_back();
+            }else{
+                printf("mDeck is empty, can't deal to player!\n");
+                return false;
+            }
+        }
+    }
+    return true;
 }

@@ -6,17 +6,26 @@
 #include <algorithm>
 #include "Card.h"
 
+/* TODO: consider change role to class sheriff and class merchant, write abtract function for each type */
 enum Role {
     SHERIFF,
     MERCHANT
 };
 
+enum PlayerState {
+    PLAYER_WAITING,
+    PLAYER_READY,
+    PLAYER_WITHDRAWING,
+    PLAYER_DISCARDING,
+    PLAYER_TRADING,
+    PLAYER_RECEIVING,
+    PLAYER_INVALID_STATE
+};
+
 class Player {
 public:
-    // Constructor
     Player(const std::string& name, Role role);
 
-    // Getters and setters
     bool setName(std::string& name);
     std::string getName() const;
     bool setRole(Role newRole);
@@ -26,22 +35,28 @@ public:
     int getGold() const;
     bool addGold(int amount);
     bool subtractGold(int amount);
+    int getPlayerPoints();
 
-    // Card management
     bool addCardToHand(const CardName card);
     bool removeCardFromHand(const CardName card);
     bool addCardToGoods(const CardName card);
+    /* TODO: consider change bag to a different class*/
+    bool addCardToBags(const CardName card);
 
-    const std::vector<CardName>& getGoods() const;
+    const std::unordered_map<CardName, int>& getGoods() const;
     const std::vector<CardName>& getHand() const;
     /* TODO: a funtion to create instance for each player */
 
 private:
+    int mPlayerColor; 
+    PlayerState mPlayerState;
     std::string mPlayerName;
     Role mPlayerRole;
     int mPlayerGold;
+    int mPlayerPoints;
     std::vector<CardName> mPlayerHand;
-    std::vector<CardName> mPlayerGoods;
+    std::vector<CardName> mPlayerBag;
+    std::unordered_map<CardName, int> mPlayerGoods;
 };
 
 #endif // PLAYER_H
