@@ -2,64 +2,80 @@
 
 // Constructor implementation
 Player::Player(const std::string& name, Role role)
-    : name(name), role(role), gold(50) {}  // Assuming each player starts with 50 gold
+    : mPlayerName(name), mPlayerRole(role), mPlayerGold(50) {
+        mPlayerHand = std::vector<CardName>();
+        mPlayerGoods = std::vector<CardName>();
+    }  // Assuming each player starts with 50 gold
 
 // Getters and setters implementation
 std::string Player::getName() const {
-    return name;
+    return mPlayerName;
 }
 
 Role Player::getRole() const {
-    return role;
+    return mPlayerRole;
 }
 
-void Player::setRole(Role newRole) {
-    role = newRole;
+bool Player::setRole(Role newRole) {
+    mPlayerRole = newRole;
+    return true;
 }
 
 int Player::getGold() const {
-    return gold;
+    return mPlayerGold;
 }
 
-void Player::addGold(int amount) {
-    gold += amount;
+bool Player::addGold(int amount) {
+    mPlayerGold += amount;
+    return true;
 }
 
-void Player::subtractGold(int amount) {
-    gold -= amount;
+bool Player::subtractGold(int amount) {
+    int currentPlayerGold = mPlayerGold - amount;
+    if(currentPlayerGold >= 0){
+        mPlayerGold = currentPlayerGold;
+        return true;
+    }else{
+        printf("Can't subtract player %s %d gold, mPlayerGold is %d\n", mPlayerName.c_str(), amount, mPlayerGold);
+        return false;
+    }
 }
 
 // Card management implementation
-void Player::addCardToHand(const CardName card) {
-    hand.push_back(card);
+bool Player::addCardToHand(const CardName card) {
+    mPlayerHand.push_back(card);
+    return true;
 }
 
 bool Player::removeCardFromHand(const CardName card) {
-    // for (auto it = hand.begin(); it != hand.end(); ++it) {
-    //     if (it->getName() == card.getName()) {
-    //         hand.erase(it);
-    //         return true;
-    //     }
-    // }
+    auto cardPosition = find(mPlayerHand.begin(), mPlayerHand.end(), card);
+    if(cardPosition != mPlayerHand.end()){
+        mPlayerHand.erase(cardPosition);
+        return true;
+    }
+    printf("Can't find %s to delete\n!", getCardNameString(card).c_str());
     return false;
 }
 
 const std::vector<CardName>& Player::getHand() const {
-    return hand;
+    return mPlayerHand;
 }
 
-void Player::addCardToGoods(const CardName card) {
-    goods.push_back(card);
+bool Player::addCardToGoods(const CardName card) {
+    mPlayerGoods.push_back(card);
+    return true;
 }
 
 const std::vector<CardName>& Player::getGoods() const {
-    return goods;
+    return mPlayerGoods;
 }
 
-void Player::setName(std::string& playerName){
-    name = playerName;
+bool Player::setName(std::string& playerName){
+    mPlayerName = playerName;
+    return true;
 }
 
-void Player::setGold(int playerGold){
-    gold = playerGold;
+bool Player::setGold(int playerGold){
+    mPlayerGold = playerGold;
+    return true;
 }

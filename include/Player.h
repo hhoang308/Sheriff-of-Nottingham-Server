@@ -6,7 +6,7 @@
 #include <algorithm>
 #include "Card.h"
 
-enum class Role {
+enum Role {
     SHERIFF,
     MERCHANT
 };
@@ -17,32 +17,31 @@ public:
     Player(const std::string& name, Role role);
 
     // Getters and setters
-    void setName(std::string& name);
+    bool setName(std::string& name);
     std::string getName() const;
-    void setRole(Role newRole);
-    void setGold(int gold);
+    bool setRole(Role newRole);
+    bool setGold(int gold);
 
     Role getRole() const;
     int getGold() const;
-    void addGold(int amount);
-    void subtractGold(int amount);
+    bool addGold(int amount);
+    bool subtractGold(int amount);
 
     // Card management
-    void addCardToHand(const CardName card);
+    bool addCardToHand(const CardName card);
     bool removeCardFromHand(const CardName card);
-    void addCardToGoods(const CardName card);
+    bool addCardToGoods(const CardName card);
 
     const std::vector<CardName>& getGoods() const;
     const std::vector<CardName>& getHand() const;
     /* TODO: a funtion to create instance for each player */
 
 private:
-    std::string name;
-    Role role;
-    int gold;
-    std::vector<CardName> hand;
-    std::vector<CardName> goods;
-
+    std::string mPlayerName;
+    Role mPlayerRole;
+    int mPlayerGold;
+    std::vector<CardName> mPlayerHand;
+    std::vector<CardName> mPlayerGoods;
 };
 
 #endif // PLAYER_H
