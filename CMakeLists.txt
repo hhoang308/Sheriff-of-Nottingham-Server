@@ -5,15 +5,19 @@ project(SheriffOfNottinghamServer)
 set(CMAKE_CXX_STANDARD 17)
 
 # Include project source directories
-include_directories(include)
+include_directories(
+    include
+    include/Model
+    include/Controller 
+)
 
 # Add source files for the main project
 set(SOURCES
     src/main.cpp
-    src/Server.cpp
-    src/Game.cpp
-    src/Player.cpp
-    src/Card.cpp
+    src/Model/Server.cpp
+    src/Controller/Game.cpp
+    src/Model/Player.cpp
+    src/Model/Card.cpp
 )
 
 # # Link the main executable with pthread and GoogleTest libraries
