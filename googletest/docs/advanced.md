@@ -286,7 +286,7 @@ For example:
 ```c++
 TEST(SkipTest, DoesSkip) {
   GTEST_SKIP() << "Skipping single test";
-  EXPECT_EQ(0, 1);  // Won't fail; it won't be executed
+  FAIL();  // Won't fail; it won't be executed
 }
 
 class SkipFixture : public ::testing::Test {
@@ -298,7 +298,7 @@ class SkipFixture : public ::testing::Test {
 
 // Tests for SkipFixture won't be executed.
 TEST_F(SkipFixture, SkipsOneTest) {
-  EXPECT_EQ(5, 7);  // Won't fail
+  FAIL();  // Won't fail; it won't be executed
 }
 ```
 
@@ -416,7 +416,7 @@ corruption, security holes, or worse. Hence it is vitally important to test that
 such assertion statements work as expected.
 
 Since these precondition checks cause the processes to die, we call such tests
-_death tests_. More generally, any test that checks that a program terminates
+*death tests*. More generally, any test that checks that a program terminates
 (except by throwing an exception) in an expected fashion is also a death test.
 
 Note that if a piece of code throws an exception, we don't consider it "death"
@@ -461,6 +461,12 @@ verifies that:
 *   calling `NormalExit()` causes the process to print `"Success"` to stderr and
     exit with exit code 0, and
 *   calling `KillProcess()` kills the process with signal `SIGKILL`.
+
+{: .callout .warning}
+Warning: If your death test contains mocks and is expecting a specific exit
+code, then you must allow the mock objects to be leaked via `Mock::AllowLeak`.
+This is because the mock leak detector will exit with its own error code if it
+detects a leak.
 
 The test function body may contain other assertions and statements as well, if
 necessary.
@@ -727,7 +733,7 @@ Some tips on using `SCOPED_TRACE`:
 ### Propagating Fatal Failures
 
 A common pitfall when using `ASSERT_*` and `FAIL*` is not understanding that
-when they fail they only abort the _current function_, not the entire test. For
+when they fail they only abort the *current function*, not the entire test. For
 example, the following test will segfault:
 
 ```c++
@@ -1004,11 +1010,21 @@ calling the `::testing::AddGlobalTestEnvironment()` function:
 Environment* AddGlobalTestEnvironment(Environment* env);
 ```
 
-Now, when `RUN_ALL_TESTS()` is called, it first calls the `SetUp()` method of
-each environment object, then runs the tests if none of the environments
-reported fatal failures and `GTEST_SKIP()` was not called. `RUN_ALL_TESTS()`
-always calls `TearDown()` with each environment object, regardless of whether or
-not the tests were run.
+Now, when `RUN_ALL_TESTS()` is invoked, it first calls the `SetUp()` method. The
+tests are then executed, provided that none of the environments have reported
+fatal failures and `GTEST_SKIP()` has not been invoked. Finally, `TearDown()` is
+called.
+
+Note that `SetUp()` and `TearDown()` are only invoked if there is at least one
+test to be performed. Importantly, `TearDown()` is executed even if the test is
+not run due to a fatal failure or `GTEST_SKIP()`.
+
+Calling `SetUp()` and `TearDown()` for each iteration depends on the flag
+`gtest_recreate_environments_when_repeating`. `SetUp()` and `TearDown()` are
+called for each environment object when the object is recreated for each
+iteration. However, if test environments are not recreated for each iteration,
+`SetUp()` is called only on the first iteration, and `TearDown()` is called only
+on the last iteration.
 
 It's OK to register multiple environment objects. In this suite, their `SetUp()`
 will be called in the order they are registered, and their `TearDown()` will be
@@ -1804,7 +1820,7 @@ and/or command line flags. For the flags to work, your programs must call
 `::testing::InitGoogleTest()` before calling `RUN_ALL_TESTS()`.
 
 To see a list of supported flags and their usage, please run your test program
-with the `--help` flag. You can also use `-h`, `-?`, or `/?` for short.
+with the `--help` flag.
 
 If an option is specified both by an environment variable and by a flag, the
 latter takes precedence.
@@ -2372,7 +2388,7 @@ IMPORTANT: The exact format of the JSON document is subject to change.
 
 #### Detecting Test Premature Exit
 
-Google Test implements the _premature-exit-file_ protocol for test runners to
+Google Test implements the *premature-exit-file* protocol for test runners to
 catch any kind of unexpected exits of test programs. Upon start, Google Test
 creates the file which will be automatically deleted after all work has been
 finished. Then, the test runner can check if this file exists. In case the file
