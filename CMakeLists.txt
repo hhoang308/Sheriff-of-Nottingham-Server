@@ -4,7 +4,19 @@ project(SheriffOfNottinghamServer)
 # Set the C++ standard
 set(CMAKE_CXX_STANDARD 17)
 
-# Include project source directories
+# Enable testing
+enable_testing()
+
+add_executable(SheriffOfNottinghamServer test/CreateAndShuffleDeckTest.cpp)
+
+# Link GoogleTest and pthread to your test executable
+target_link_libraries(SheriffOfNottinghamServer ${GTEST_LIBRARIES} pthread)
+
+# Find GoogleTest
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
+
+# Include directories
 include_directories(include)
 
 # Find ENet
@@ -15,17 +27,16 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 # Add source files
 set(SOURCES
     src/main.cpp
-    src/Model/Server.cpp
-    src/Controller/Game.cpp
-    src/Model/Player.cpp
-    src/Model/Card.cpp
+    src/Server.cpp
+    src/Game.cpp
+    src/Player.cpp
+    src/Card.cpp
 )
 
-# # Link the main executable with pthread and GoogleTest libraries
-# target_link_libraries(SheriffOfNottinghamServer PRIVATE GTest::GTest GTest::Main Threads::Threads)
-
-# Create the main executable (SheriffOfNottinghamServer)
+# Add executable
 add_executable(SheriffOfNottinghamServer ${SOURCES})
 
 # Link ENet library
 # target_link_libraries(SheriffOfNottinghamServer ${ENET_LIBRARY})
+
+add_test(NAME SheriffOfNottinghamServer COMMAND SheriffOfNottinghamServer)
