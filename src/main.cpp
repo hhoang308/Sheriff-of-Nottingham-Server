@@ -1,3 +1,4 @@
+#include "main.h"
 #include "Server.h"
 #include "Card.h"
 #include "Player.h"
@@ -76,16 +77,16 @@ std::vector<Card> createAndShuffleDeck(const int numberOfPlayer) {
     return deck;
 }
 
-int main(int argc, char* argv[]) {
-    printf("Welcome to Sheriff of Nottingham!\n");
+// int main(int argc, char* argv[]) {
+//     printf("Welcome to Sheriff of Nottingham!\n");
 
-    // Create and shuffle the deck
-    std::vector<Card> deck = createAndShuffleDeck(3);
+//     // Create and shuffle the deck
+//     std::vector<Card> deck = createAndShuffleDeck(3);
 
-    // Print the shuffled deck to verify
-    for (int i = 0; i < deck.size(); i++) {
-        printf("%d. Card Name: %s, Type: %s\n", i + 1, deck[i].getName().c_str(), (deck[i].getType() == CardType::LEGAL ? "Legal" : "Contraband"));
-    }
+//     // Print the shuffled deck to verify
+//     for (int i = 0; i < deck.size(); i++) {
+//         printf("%d. Card Name: %s, Type: %s\n", i + 1, deck[i].getName().c_str(), (deck[i].getType() == CardType::LEGAL ? "Legal" : "Contraband"));
+//     }
 
-    return EXIT_SUCCESS;
-}
+//     return EXIT_SUCCESS;
+// }
