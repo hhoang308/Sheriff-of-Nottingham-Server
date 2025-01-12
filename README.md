@@ -21,9 +21,6 @@ make
 # Build both the project and unit tests
 cmake --build .
 
-# Run the server
-./SheriffOfNottinghamServer
-
 # Execute Unit Test
 ./UnitTests
 ```

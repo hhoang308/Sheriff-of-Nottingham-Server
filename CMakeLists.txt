@@ -40,7 +40,14 @@ add_subdirectory(googletest)
 target_link_libraries(SheriffOfNottinghamServer gtest gtest_main Threads::Threads)
 
 # Add unit tests
-add_executable(UnitTests test/test_createAndSuffleDeck.cpp)
+add_executable(UnitTests
+    test/test_createAndSuffleDeck.cpp
+    src/Server.cpp
+    src/Game.cpp
+    src/Player.cpp
+    src/Card.cpp
+    src/main.cpp 
+)
 
 # Link GoogleTest and pthread to the unit test executable
 target_link_libraries(UnitTests gtest gtest_main Threads::Threads)
