@@ -1,30 +1,42 @@
 cmake_minimum_required(VERSION 3.10)
 project(SheriffOfNottinghamServer)
 
-# Set the C++ standard
 set(CMAKE_CXX_STANDARD 17)
 
-# Include project source directories
 include_directories(
     include
-    include/Model
-    include/Controller 
+    include/model
+    include/controller 
 )
 
-# Add source files for the main project
 set(SOURCES
-    src/main.cpp
-    src/Model/Server.cpp
-    src/Controller/Game.cpp
-    src/Model/Player.cpp
-    src/Model/Card.cpp
+    src/model/Server.cpp
+    src/controller/Game.cpp
+    src/model/Player.cpp
+    src/model/Card.cpp
 )
 
-# # Link the main executable with pthread and GoogleTest libraries
-# target_link_libraries(SheriffOfNottinghamServer PRIVATE GTest::GTest GTest::Main Threads::Threads)
+add_executable(SheriffOfNottinghamServer 
+    src/main.cpp
+    ${SOURCES}
+)
 
-# Create the main executable (SheriffOfNottinghamServer)
-add_executable(SheriffOfNottinghamServer ${SOURCES})
+########For Unit Test########
 
-# Link ENet library
-# target_link_libraries(SheriffOfNottinghamServer ${ENET_LIBRARY})
+find_package(Threads REQUIRED)
+
+enable_testing()
+
+add_executable(UnitTests 
+    test/test_createAndSuffleDeck.cpp
+    ${SOURCES}
+)
+
+add_subdirectory(googletest)
+
+# TODO: is it necessary to link these library?
+target_link_libraries(SheriffOfNottinghamServer gtest gtest_main Threads::Threads)
+
+target_link_libraries(UnitTests gtest gtest_main Threads::Threads)
+
+add_test(NAME UnitTests COMMAND UnitTests)
