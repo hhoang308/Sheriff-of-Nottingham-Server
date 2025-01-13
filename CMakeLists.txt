@@ -7,17 +7,17 @@ set(CMAKE_CXX_STANDARD 17)
 # Include project source directories
 include_directories(
     include
-    include/Model
-    include/Controller 
+    include/model
+    include/controller 
 )
 
 # Add source files for the main project
 set(SOURCES
     src/main.cpp
-    src/Model/Server.cpp
-    src/Controller/Game.cpp
-    src/Model/Player.cpp
-    src/Model/Card.cpp
+    src/model/Server.cpp
+    src/controller/Game.cpp
+    src/model/Player.cpp
+    src/model/Card.cpp
 )
 
 # # Link the main executable with pthread and GoogleTest libraries
