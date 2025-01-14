@@ -23,4 +23,6 @@ make
 cmake --build
 # [Optional] Execute unit tests
 ./UnitTests
+or
+ctest
 ```
