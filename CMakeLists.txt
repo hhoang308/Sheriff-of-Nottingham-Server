@@ -34,9 +34,8 @@ add_executable(UnitTests
 
 add_subdirectory(googletest)
 
-# TODO: is it necessary to link these library?
-target_link_libraries(SheriffOfNottinghamServer gtest gtest_main Threads::Threads)
-
 target_link_libraries(UnitTests gtest gtest_main Threads::Threads)
 
-add_test(NAME UnitTests COMMAND UnitTests)
+# Use GoogleTest's CTest integration
+include(GoogleTest)
+gtest_discover_tests(UnitTests)
