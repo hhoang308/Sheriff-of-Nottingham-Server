@@ -18,6 +18,8 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < deck.size(); i++) {
         printf("%d. Card Name: %s, Type: %s\n", i + 1, getCardNameString(deck[i]).c_str(), getCardTypeString(deck[i]).c_str());
     }
+    Server server;
+    server.start();
 
     delete currentGame;
 

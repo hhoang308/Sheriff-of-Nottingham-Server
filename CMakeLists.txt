@@ -16,10 +16,13 @@ set(SOURCES
     src/model/Card.cpp
 )
 
+
 add_executable(SheriffOfNottinghamServer 
     src/main.cpp
     ${SOURCES}
 )
+
+target_link_libraries(SheriffOfNottinghamServer PRIVATE pthread)
 
 ########For Unit Test########
 

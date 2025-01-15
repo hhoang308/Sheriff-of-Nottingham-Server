@@ -57,6 +57,7 @@ private:
     std::vector<CardName> mPlayerHand;
     std::vector<CardName> mPlayerBag;
     std::unordered_map<CardName, int> mPlayerGoods;
+    int mPlayerSocket;
 };
 
 #endif // PLAYER_H
