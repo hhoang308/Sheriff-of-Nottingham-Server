@@ -9,6 +9,12 @@ sudo apt-get install build-essential cmake pkg-config libgtest-dev
 # Clone the project
 git clone https://github.com/hhoang308/Sheriff-of-Nottingham-Server.git
 cd SheriffOfNottinghamServer
+# Install jsoncpp (in Ubuntu)
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+./bootstrap-vcpkg.sh
+./vcpkg integrate install
+./vcpkg install jsoncpp
 # [Optional] Clone googletest for unitest
 git clone https://github.com/google/googletest.git
 # Configure the project

@@ -34,19 +34,3 @@ TEST(CreateAndShuffleDeckTest, TestWithInvalidPlayerCount) {
     // Kiểm tra xem bộ bài có rỗng không (vì số người chơi không hợp lệ)
     EXPECT_TRUE(deck.empty());
 }
-
-/**
- * @brief Main function to initializes Googletest and run all of the tests in the program.
- * 
- * @param argc The number of command-line arguments.
- * @param argv Array of pointers to the command-line arguments.
- * @return The exit code for the program. It returns 0 when all tests are successfull, or 1 otherwise.
- */
-int main(int argc, char* argv[])
-{
-    // Initialize Googletest
-    ::testing::InitGoogleTest(&argc, argv);
-
-    // This function is called to run all tests
-    return RUN_ALL_TESTS();
-}
