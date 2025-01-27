@@ -24,12 +24,15 @@ enum PlayerState {
 
 class Player {
 public:
-    Player(const std::string& name, Role role);
+    Player(const int socketID, const int gameID, const std::string& playerName);
 
     bool setName(std::string& name);
     std::string getName() const;
     bool setRole(Role newRole);
     bool setGold(int gold);
+    bool setState(PlayerState newState);
+    int getSocketID() const;
+    int getGameID() const;
 
     Role getRole() const;
     int getGold() const;
@@ -48,7 +51,10 @@ public:
     /* TODO: a funtion to create instance for each player */
 
 private:
-    int mPlayerColor; 
+    int mGameID;
+    int mSocketID;
+
+    int mPlayerColor;
     PlayerState mPlayerState;
     std::string mPlayerName;
     Role mPlayerRole;
@@ -57,7 +63,6 @@ private:
     std::vector<CardName> mPlayerHand;
     std::vector<CardName> mPlayerBag;
     std::unordered_map<CardName, int> mPlayerGoods;
-    int mPlayerSocket;
 };
 
 #endif // PLAYER_H

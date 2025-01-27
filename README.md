@@ -4,6 +4,10 @@
 sudo apt-get update
 sudo apt-get install build-essential cmake pkg-config libgtest-dev
 ```
+## Commit message rule
+```
+<action> <subject> <optional extra information>
+```
 ## How to build the project
 ```
 # Clone the project

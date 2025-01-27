@@ -1,8 +1,10 @@
 #include "Player.h"
+#include "Log.h"
 
 /* TODO: set player color in constructor, with color format */
-Player::Player(const std::string& name, Role role)
-    : mPlayerName(name), mPlayerRole(role), mPlayerGold(50), mPlayerPoints(50) {
+Player::Player(const int socketID, const int gameID, const std::string& playerName)
+    : mPlayerGold(50), mPlayerState(PLAYER_WAITING), mSocketID(socketID), mGameID(gameID), mPlayerName(playerName) {
+        LOG(INFO, "Player %s created with socketID %d, gameID %d", playerName.c_str(), socketID, gameID);
         mPlayerHand = std::vector<CardName>();
         mPlayerGoods = std::unordered_map<CardName, int>();
         mPlayerBag = std::vector<CardName>();
@@ -21,8 +23,21 @@ bool Player::setRole(Role newRole) {
     return true;
 }
 
+bool Player::setState(PlayerState newState) {
+    mPlayerState = newState;
+    return true;
+}
+
 int Player::getGold() const {
     return mPlayerGold;
+}
+
+int Player::getSocketID() const {
+    return mSocketID;
+}
+
+int Player::getGameID() const {
+    return mGameID;
 }
 
 bool Player::addGold(int amount) {
@@ -73,6 +88,7 @@ const std::unordered_map<CardName, int>& Player::getGoods() const {
 }
 
 bool Player::setName(std::string& playerName){
+    LOG(INFO, "Player name set to %s", playerName.c_str());
     mPlayerName = playerName;
     return true;
 }

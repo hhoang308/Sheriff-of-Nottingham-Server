@@ -8,6 +8,7 @@ set(INCLUDE_DIRS
     include/model
     include/controller
     include/utils
+    include/interface
 )
 
 set(SERVER_SOURCES
@@ -16,6 +17,7 @@ set(SERVER_SOURCES
     src/model/Player.cpp
     src/model/Card.cpp
     src/utils/Utils.cpp
+    src/model/GameStateMachine.cpp
 )
 
 file(GLOB TEST_SOURCES test/*.cpp)
