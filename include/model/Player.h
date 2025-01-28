@@ -14,6 +14,7 @@ enum Role {
 
 enum PlayerState {
     PLAYER_WAITING,
+    PLAYER_UNREADY,
     PLAYER_READY,
     PLAYER_WITHDRAWING,
     PLAYER_DISCARDING,
@@ -28,14 +29,19 @@ public:
 
     bool setName(std::string& name);
     std::string getName() const;
+
     bool setRole(Role newRole);
+    Role getRole() const;
+
     bool setGold(int gold);
+    int getGold() const;
+
     bool setState(PlayerState newState);
+    PlayerState getState() const;
+
     int getSocketID() const;
     int getGameID() const;
 
-    Role getRole() const;
-    int getGold() const;
     bool addGold(int amount);
     bool subtractGold(int amount);
     int getPlayerPoints();

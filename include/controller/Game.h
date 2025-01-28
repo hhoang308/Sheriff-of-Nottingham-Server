@@ -47,10 +47,14 @@ public:
 
     void setState(GameState* newState);
     void handleRequest(const std::string& message, const int socketId);
+    std::string getCurrentState();
 
     bool addPlayer(const int socketID, const int gameID, const std::string& playerName);
     bool removePlayer(const int socketId);
     Player& getPlayer(const int socketId);
+
+    bool isPlayerExists(const int socketId);\
+    bool isAllPlayerReady();
 
     int getGameId() const;
     const std::list<std::pair<int, std::unique_ptr<Player>>>& getAllPlayers();

@@ -28,6 +28,10 @@ bool Player::setState(PlayerState newState) {
     return true;
 }
 
+PlayerState Player::getState() const {
+    return mPlayerState;
+}
+
 int Player::getGold() const {
     return mPlayerGold;
 }

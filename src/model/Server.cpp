@@ -111,6 +111,7 @@ void Server::handleClient(int clientSocket) {
                 continue;
             } else {
                 LOG(ERROR, "Read failed: %s", strerror(errno));
+                // closeConnection(clientSocket);
                 break;
             }
         }
@@ -118,7 +119,7 @@ void Server::handleClient(int clientSocket) {
         /* Suspicious connection : https://github.com/hhoang308/Sheriff-of-Nottingham-Server/issues/8 */
         std::string rawMessage(buffer);
         if(rawMessage.compare(0, 3, "GET") == 0) {
-            LOG(INFO, "GET request from client %d", clientSocket);
+            LOG(INFO, "GET request from client %d, close and remove it", clientSocket);
             shutdown(clientSocket, SHUT_RDWR);
             close(clientSocket);
             break;
@@ -131,6 +132,21 @@ void Server::handleClient(int clientSocket) {
                 curGame = mGames[mSocketIDToGame[clientSocket]].get();
             }
         }
+
+        /* Handle the situation player join but the game has started */
+        if (curGame
+        && curGame->getCurrentState() != "WaitingForPlayersState"
+        && mSocketIDToGame.find(clientSocket) == mSocketIDToGame.end()) {
+            LOG(INFO, "Game has started, can't add playerName %d", clientSocket);
+            Json::Value message;
+            message["MessageType"] = "GAME_REJECT_PLAYER";
+            message["Reason"] = "GAME_STARTED";
+            sendToClient(jsonToString(message), clientSocket);
+            shutdown(clientSocket, SHUT_RDWR);
+            close(clientSocket);
+            break;
+        }
+
         /* TODO: Handle the situation when all players disconect */
         if (valRead == 0) {
             if(curGame->getPlayerSize() == 1){
@@ -138,20 +154,23 @@ void Server::handleClient(int clientSocket) {
                 mGames.erase(mSocketIDToGame[clientSocket]);
                 break;
             }
-            Json::Value message;
-            message["MessageType"] = "GAME_DISCONNECT_PLAYER";
-            message["PlayerName"] = curGame->getPlayer(clientSocket).getName();
-            LOG(INFO, "Client disconnected!");
-            {
-                std::lock_guard<std::mutex> lock(mClientMutex);
-                /* TODO : Find player in all game -> erase their data */
-                if (curGame) {
-                    LOG(INFO, "Removing playerSocketID %d from game", clientSocket);
-                    (void) curGame->removePlayer(clientSocket);
+            if(curGame->isPlayerExists(clientSocket)){
+                Json::Value message;
+                message["MessageType"] = "GAME_DISCONNECT_PLAYER";
+                message["PlayerName"] = curGame->getPlayer(clientSocket).getName();
+                LOG(INFO, "Client disconnected!");
+                {
+                    std::lock_guard<std::mutex> lock(mClientMutex);
+                    /* TODO : Find player in all game -> erase their data */
+                    if (curGame) {
+                        LOG(INFO, "Removing playerSocketID %d from game", clientSocket);
+                        (void) curGame->removePlayer(clientSocket);
+                    }
+                    mSocketIDToGame.erase(clientSocket);
                 }
-                mSocketIDToGame.erase(clientSocket);
+                sendToAll(jsonToString(message));
             }
-            sendToAll(jsonToString(message));
+            shutdown(clientSocket, SHUT_RDWR);
             close(clientSocket);
             break;
         }

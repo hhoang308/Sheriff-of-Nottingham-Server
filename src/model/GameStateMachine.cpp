@@ -94,7 +94,7 @@ void WaitingForPlayersState::handleRequest(Game* curGame, const std::string& mes
         curGame->sendMessageToAll(jsonToString(message));
 
         if(curGame->getPlayerSize() >= 3
-        && mPlayerReadyCount == curGame->getPlayerSize()) {
+        && curGame->isAllPlayerReady()) {
             LOG(INFO, "All players are ready, starting the game");
             Json::Value readyMessage;
             readyMessage["MessageType"] = "GAME_START";
@@ -110,6 +110,7 @@ void WaitingForPlayersState::handleRequest(Game* curGame, const std::string& mes
         Json::Value message;
         message["MessageType"] = "GAME_ACCEPT_UNREADY";
         message["PlayerName"] = playerName;
+        (void) curGame->getPlayer(socketID).setState(PLAYER_UNREADY);
         curGame->sendMessageToAll(jsonToString(message));
 
     } else if(messageType == "PLAYERRESPONSE") {

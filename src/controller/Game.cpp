@@ -43,6 +43,13 @@ void Game::handleRequest(const std::string& message, const int socketId) {
     }
 }
 
+std::string Game::getCurrentState() {
+    if (currentState == nullptr) {
+        return "InvalidState";
+    }
+    return currentState->getStateName();
+}
+
 bool Game::addPlayer(const int socketID, const int gameID, const std::string& playerName) {
     LOG(INFO, "socketID %d gameID %d", socketID, gameID);
     {
@@ -295,4 +302,24 @@ int Game::getPlayerSize(){
 const std::list<std::pair<int, std::unique_ptr<Player>>>& Game::getAllPlayers() {
     std::lock_guard<std::mutex> lock(mPlayerMutex);
     return mPlayers;
+}
+
+bool Game::isPlayerExists(const int socketId) {
+    std::lock_guard<std::mutex> lock(mPlayerMutex);
+    for (const auto& pair : mPlayers) {
+        if (pair.first == socketId) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Game::isAllPlayerReady() {
+    std::lock_guard<std::mutex> lock(mPlayerMutex);
+    for (const auto& pair : mPlayers) {
+        if (pair.second->getState() != PLAYER_READY) {
+            return false;
+        }
+    }
+    return true;
 }
