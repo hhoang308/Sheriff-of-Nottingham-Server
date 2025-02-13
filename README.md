@@ -21,12 +21,17 @@ cd vcpkg
 ./vcpkg install jsoncpp
 # [Optional] Clone googletest for unitest
 git clone https://github.com/google/googletest.git
-# Configure the project
-mkdir build
-cd build
 # Build the project
-cmake ..
-make
+./build.sh
+Options:
+default is --debug --server --run
+--debug : Build Sheriff of Nottingham with full logs
+--release : Build Sheriff of Nottingham without debug logs
+--run : Build Sheriff of Nottingham and run it (if it success)
+--server : Build Sheriff of Nottingham
+--tests : Build unit tests of Sheriff of Nottingham
+--all : Build unit tests and Sheriff of Nottingham
+--clean : Clean build directory
 # Run the server
 ./SheriffOfNottinghamServer
 # [Optional] Build both the project and unit tests

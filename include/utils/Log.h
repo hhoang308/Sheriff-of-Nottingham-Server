@@ -5,8 +5,15 @@
 
 enum LogLevel { DEBUG, INFO, WARNING, ERROR };
 
-#define LOG(level, msg, ...) \
-    printf("[%s][%s:%s():%d] " msg "\n", logLevelToString(level), getFileName(__FILE__).c_str(), __func__, __LINE__, ##__VA_ARGS__)
+#ifdef ENABLE_DEBUG_LOGS
+    #define LOG(level, msg, ...) \
+        printf("[%s][%s:%s():%d] " msg "\n", logLevelToString(level), getFileName(__FILE__).c_str(), __func__, __LINE__, ##__VA_ARGS__)
+#else
+    #define LOG(level, msg, ...) \
+        if (level != DEBUG) { \
+            printf("[%s][%s:%s():%d] " msg "\n", logLevelToString(level), getFileName(__FILE__).c_str(), __func__, __LINE__, ##__VA_ARGS__); \
+        }
+#endif
 
 inline const char* logLevelToString(LogLevel level) {
     switch (level) {

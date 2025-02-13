@@ -118,8 +118,9 @@ void Server::handleClient(int clientSocket) {
 
         /* Suspicious connection : https://github.com/hhoang308/Sheriff-of-Nottingham-Server/issues/8 */
         std::string rawMessage(buffer);
-        if(rawMessage.compare(0, 3, "GET") == 0) {
-            LOG(INFO, "GET request from client %d, close and remove it", clientSocket);
+        if(rawMessage.compare(0, 3, "GET") == 0
+        || rawMessage.compare(0, 3, "POST") == 0) {
+            LOG(INFO, "Unknown request from client %d, close and remove it", clientSocket);
             shutdown(clientSocket, SHUT_RDWR);
             close(clientSocket);
             break;
