@@ -24,7 +24,7 @@ git clone https://github.com/google/googletest.git
 # Build the project
 ./build.sh
 Options:
-default is --debug --server --run
+default is --debug --server
 --debug : Build Sheriff of Nottingham with full logs
 --release : Build Sheriff of Nottingham without debug logs
 --run : Build Sheriff of Nottingham and run it (if it success)
