@@ -75,6 +75,18 @@ void WaitingForPlayersState::handleRequest(Game* curGame, const std::string& mes
 
             curGame->sendMessageToClient(jsonToString(connectedRecentlyMessage), socketID);
 
+            /* The new player can know the status (READY/UNREADY) of the previous players. */
+            for(const auto &pair : curGame->getAllPlayers())
+            {
+                if(pair.second->getState() == PLAYER_READY)
+                {
+                    Json::Value playerConnectedState;
+                    playerConnectedState["MessageType"] = "PLAYER_ACCEPT_READY";
+                    playerConnectedState["PlayerName"] = pair.second->getName();
+                    curGame->sendMessageToClient(jsonToString(playerConnectedState), socketID);
+                }
+            }
+
             Json::Value notifyMessage;
             notifyMessage["MessageType"] = "GAME_CONNECTED_PLAYER_NOW";
             notifyMessage["PlayerName"] = playerName;
