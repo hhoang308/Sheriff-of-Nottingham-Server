@@ -111,7 +111,7 @@ void Server::handleClient(int clientSocket) {
                 continue;
             } else {
                 LOG(ERROR, "Read failed: %s", strerror(errno));
-                // closeConnection(clientSocket);
+                closeConnection(clientSocket);
                 break;
             }
         }
