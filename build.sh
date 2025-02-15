@@ -20,10 +20,10 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-echo "  Build Type: $BUILD_TYPE"
-echo "  Build Server: $BUILD_SERVER"
-echo "  Build Tests: $BUILD_TESTS"
-echo "  Run After Build: $RUN_AFTER_BUILD"
+echo "Build Type: $BUILD_TYPE"
+echo "Build Server: $BUILD_SERVER"
+echo "Build Tests: $BUILD_TESTS"
+echo "Run After Build: $RUN_AFTER_BUILD"
 
 mkdir -p "$BUILD_DIR"
 cmake -S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_SERVER=$BUILD_SERVER -DBUILD_TESTS=$BUILD_TESTS
