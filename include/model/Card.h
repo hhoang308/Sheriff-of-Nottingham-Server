@@ -5,14 +5,17 @@
 #include <unordered_map>
 
 #define CARD_SIZE 8
+#define MAX_CARD_OF_PLAYER 6
 
-enum CardType {
+enum CardType
+{
     LEGAL,
     CONTRABAND
 };
 
 // Enum for card names, as there are only 8 types
-enum CardName {
+enum CardName
+{
     APPLE,
     CHEESE,
     BREAD,
@@ -25,6 +28,8 @@ enum CardName {
 };
 
 extern const std::unordered_map<CardName, std::string> cardNameToString;
+
+extern const std::unordered_map<std::string, CardName> stringToCardName;
 
 extern const std::unordered_map<CardName, CardType> cardNameToCardType;
 

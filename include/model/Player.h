@@ -7,27 +7,34 @@
 #include "Card.h"
 
 /* TODO: consider change role to class sheriff and class merchant, write abtract function for each type */
-enum Role {
+enum Role
+{
     SHERIFF,
     MERCHANT
 };
 
-enum PlayerState {
+enum PlayerState
+{
     PLAYER_WAITING,
     PLAYER_UNREADY,
     PLAYER_READY,
-    PLAYER_WITHDRAWING,
-    PLAYER_DISCARDING,
+    PLAYER_START,
+    PLAYER_RECEIVE_INITIAL_DISCARD_PILE,
+    PLAYER_RECEIVE_ROLE,
+    PLAYER_RECEIVE_CARDS,
+    // PLAYER_WITHDRAWING,
+    // PLAYER_DISCARDING,
     PLAYER_TRADING,
     PLAYER_RECEIVING,
     PLAYER_INVALID_STATE
 };
 
-class Player {
+class Player
+{
 public:
-    Player(const int socketID, const int gameID, const std::string& playerName);
+    Player(const int socketID, const int gameID, const std::string &playerName);
 
-    bool setName(std::string& name);
+    bool setName(std::string &name);
     std::string getName() const;
 
     bool setRole(Role newRole);
@@ -52,8 +59,8 @@ public:
     /* TODO: consider change bag to a different class*/
     bool addCardToBags(const CardName card);
 
-    const std::unordered_map<CardName, int>& getGoods() const;
-    const std::vector<CardName>& getHand() const;
+    const std::unordered_map<CardName, int> &getGoods() const;
+    const std::vector<CardName> &getHand() const;
     /* TODO: a funtion to create instance for each player */
 
 private:

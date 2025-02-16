@@ -8,8 +8,17 @@ const std::unordered_map<CardName, std::string> cardNameToString = {
     {PEPPER, "Pepper"},
     {MEAD, "Mead"},
     {SILK, "Silk"},
-    {CROSSBOW, "Crossbow"}
-};
+    {CROSSBOW, "Crossbow"}};
+
+const std::unordered_map<std::string, CardName> stringToCardName = {
+    {"Apple", APPLE},
+    {"Cheese", CHEESE},
+    {"Bread", BREAD},
+    {"Chicken", CHICKEN},
+    {"Pepper", PEPPER},
+    {"Mead", MEAD},
+    {"Silk", SILK},
+    {"Crossbow", CROSSBOW}};
 
 const std::unordered_map<CardName, CardType> cardNameToCardType = {
     {APPLE, LEGAL},
@@ -19,13 +28,11 @@ const std::unordered_map<CardName, CardType> cardNameToCardType = {
     {PEPPER, CONTRABAND},
     {MEAD, CONTRABAND},
     {SILK, CONTRABAND},
-    {CROSSBOW, CONTRABAND}
-};
+    {CROSSBOW, CONTRABAND}};
 
 const std::unordered_map<CardType, std::string> cardTypeToString = {
     {LEGAL, "Legal"},
-    {CONTRABAND, "Contraband"}
-};
+    {CONTRABAND, "Contraband"}};
 
 // Map to store card values and counts for each card type
 const std::unordered_map<CardName, int> cardValue = {
@@ -36,8 +43,7 @@ const std::unordered_map<CardName, int> cardValue = {
     {PEPPER, 8},
     {MEAD, 7},
     {SILK, 9},
-    {CROSSBOW, 10}
-};
+    {CROSSBOW, 10}};
 
 // Map to store card values and counts for each card type
 const std::unordered_map<CardName, int> cardPenalty = {
@@ -48,8 +54,7 @@ const std::unordered_map<CardName, int> cardPenalty = {
     {PEPPER, 4},
     {MEAD, 4},
     {SILK, 4},
-    {CROSSBOW, 4}
-};
+    {CROSSBOW, 4}};
 
 const std::unordered_map<CardName, int> bonusPointsChampion = {
     {APPLE, 20},
@@ -65,10 +70,12 @@ const std::unordered_map<CardName, int> bonusPointRunnerUp = {
     {CHICKEN, 5},
 };
 
-std::string getCardNameString(const CardName card){
+std::string getCardNameString(const CardName card)
+{
     return cardNameToString.at(card);
 }
 
-std::string getCardTypeString(const CardName card){
+std::string getCardTypeString(const CardName card)
+{
     return cardTypeToString.at(cardNameToCardType.at(card));
 }

@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "GameStateMachine.h"
+#include "Utils.h"
 #include <iostream>
 #include <Log.h>
 #include <memory>
@@ -25,36 +26,46 @@ Game::~Game()
     delete currentState;
 }
 
-void Game::setState(GameState* newState) {
+void Game::setState(GameState *newState)
+{
     LOG(INFO, "previousState %s", newState->getStateName().c_str());
     delete currentState;
     currentState = newState;
-    if(currentState) {
-        currentState->enterState();
+    if (currentState)
+    {
+        currentState->enterState(this);
     }
     LOG(INFO, "currentState %s", currentState->getStateName().c_str());
 }
 
-void Game::handleRequest(const std::string& message, const int socketId) {
-    if (currentState) {
+void Game::handleRequest(const std::string &message, const int socketId)
+{
+    if (currentState)
+    {
         currentState->handleRequest(this, message, socketId);
-    } else {
+    }
+    else
+    {
         LOG(ERROR, "No valid state to handle the message!");
     }
 }
 
-std::string Game::getCurrentState() {
-    if (currentState == nullptr) {
+std::string Game::getCurrentState()
+{
+    if (currentState == nullptr)
+    {
         return "InvalidState";
     }
     return currentState->getStateName();
 }
 
-bool Game::addPlayer(const int socketID, const int gameID, const std::string& playerName) {
-    LOG(INFO, "socketID %d gameID %d", socketID, gameID);
+bool Game::addPlayer(const int socketID, const int gameID, const std::string &playerName)
+{
+    // LOG(INFO, "socketID %d gameID %d", socketID, gameID);
     {
         std::lock_guard<std::mutex> lock(mPlayerMutex);
-        if (mPlayers.size() > MAX_NUMBER_OF_PLAYER) {
+        if (mPlayers.size() > MAX_NUMBER_OF_PLAYER)
+        {
             return false;
         }
         mPlayers.emplace(mPlayers.end(), socketID, std::make_unique<Player>(socketID, gameID, playerName));
@@ -68,8 +79,10 @@ bool Game::removePlayer(int socketId)
     LOG(INFO, "removePlayer() %d", socketId);
     std::lock_guard<std::mutex> lock(mPlayerMutex);
 
-    for (auto it = mPlayers.begin(); it != mPlayers.end(); ++it) {
-        if (it->first == socketId) {
+    for (auto it = mPlayers.begin(); it != mPlayers.end(); ++it)
+    {
+        if (it->first == socketId)
+        {
             LOG(INFO, "Player with socketID %d removed", socketId);
             mPlayers.erase(it);
             return true;
@@ -80,13 +93,15 @@ bool Game::removePlayer(int socketId)
     return false;
 }
 
-Player& Game::getPlayer(int socketId)
+Player &Game::getPlayer(int socketId)
 {
     LOG(INFO, "getPlayer() %d", socketId);
     std::lock_guard<std::mutex> lock(mPlayerMutex);
 
-    for (auto& pair : mPlayers) {
-        if (pair.first == socketId) {
+    for (auto &pair : mPlayers)
+    {
+        if (pair.first == socketId)
+        {
             LOG(INFO, "Player with socketID %d found", socketId);
             return *(pair.second);
         }
@@ -96,18 +111,39 @@ Player& Game::getPlayer(int socketId)
     throw std::runtime_error("Player with socketID " + std::to_string(socketId) + " not found");
 }
 
-// Function to create and shuffle the deck
-/* TODO: create and shuffle deck based on the number of player */
-/* TODO: verify this in game's rule */
-std::vector<CardName> Game::createAndShuffleDeck()
+bool Game::addMerchantOrder(const int socketID)
 {
-    int numberOfPlayer = mPlayers.size();
-    if (numberOfPlayer < 3 || numberOfPlayer > 6)
+    LOG(INFO, "%d", socketID);
     {
-        printf("numberOfPlayer %d is invalid\n", numberOfPlayer);
-        return std::vector<CardName>();
+        std::lock_guard<std::mutex> lock(mMerchantMutex);
+        if (mMerchantOrder.size() >= mNumberOfPlayers)
+        {
+            return false;
+        }
+        mMerchantOrder.push(socketID);
     }
-    std::vector<CardName> deck;
+    return true;
+}
+
+/**
+ * @brief create mNumberOfPlayer, mTotalRounds, mCurrentRound, mDeck, mLeftPile, mRightPile
+ *
+ * @return true
+ * @return false
+ */
+bool Game::createGameDetails()
+{
+    mNumberOfPlayers = mPlayers.size();
+    /* There are 3 players, each player will become sheriff 3 times, otherwise, each player will become sheriff 2 times */
+    mPlayerSheriffTimes = (mNumberOfPlayers == 3) ? mNumberOfPlayers * 3 : mNumberOfPlayers * 2;
+    mSheriffIndex = 0;
+    if (mNumberOfPlayers < 3 || mNumberOfPlayers > 6)
+    {
+        printf("numberOfPlayer %d is invalid\n", mNumberOfPlayers);
+        return false;
+    }
+
+    mDeck.clear();
 
     int appleCount = 48;
     int cheeseCount = 36;
@@ -119,7 +155,7 @@ std::vector<CardName> Game::createAndShuffleDeck()
     int crossbowCount = 5;
     int pepperCount = 22;
 
-    if (numberOfPlayer == 3)
+    if (mNumberOfPlayers == 3)
     {
         breadCount -= 36;
         pepperCount -= 4;
@@ -130,52 +166,70 @@ std::vector<CardName> Game::createAndShuffleDeck()
     // Add cards to the deck
     for (int i = 0; i < appleCount; ++i)
     {
-        deck.emplace_back(CardName::APPLE);
+        mDeck.emplace_back(CardName::APPLE);
     }
     for (int i = 0; i < cheeseCount; ++i)
     {
-        deck.emplace_back(CardName::CHEESE);
+        mDeck.emplace_back(CardName::CHEESE);
     }
     for (int i = 0; i < breadCount; ++i)
     {
-        deck.emplace_back(CardName::BREAD);
+        mDeck.emplace_back(CardName::BREAD);
     }
     for (int i = 0; i < chickenCount; ++i)
     {
-        deck.emplace_back(CardName::CHICKEN);
+        mDeck.emplace_back(CardName::CHICKEN);
     }
     for (int i = 0; i < pepperCount; ++i)
     {
-        deck.emplace_back(CardName::PEPPER);
+        mDeck.emplace_back(CardName::PEPPER);
     }
     for (int i = 0; i < meadCount; ++i)
     {
-        deck.emplace_back(CardName::MEAD);
+        mDeck.emplace_back(CardName::MEAD);
     }
     for (int i = 0; i < silkCount; ++i)
     {
-        deck.emplace_back(CardName::SILK);
+        mDeck.emplace_back(CardName::SILK);
     }
     for (int i = 0; i < crossbowCount; ++i)
     {
-        deck.emplace_back(CardName::CROSSBOW);
+        mDeck.emplace_back(CardName::CROSSBOW);
     }
 
     // Shuffle the deck
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-    std::shuffle(deck.begin(), deck.end(), std::default_random_engine(seed));
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(mDeck.begin(), mDeck.end(), g);
 
-    return deck;
+    // Take 5 random cards for mLeftPile and mRightPile
+    for (int i = 0; i < 5; ++i)
+    {
+        mLeftPile.push_back(mDeck.back());
+        mDeck.pop_back();
+    }
+
+    for (int i = 0; i < 5; ++i)
+    {
+        mRightPile.push_back(mDeck.back());
+        mDeck.pop_back();
+    }
+
+    return true;
 }
+
+/* TODO: Handle the situation when Deck is empty */
 
 CardName Game::withdrawDeck()
 {
+    std::lock_guard<std::mutex> lock(mDeckMutex);
     if (mDeck.empty())
     {
         printf("mDeck is empty, can't withdraw!\n");
         return INVALID_CARD;
     }
-    CardName topCardOfDeck = mDeck.front();
+    CardName topCardOfDeck = mDeck.back();
+    LOG(INFO, "Withdraw Deck %s", cardNameToString.at(topCardOfDeck).c_str());
     mDeck.pop_back();
     return topCardOfDeck;
 }
@@ -187,27 +241,28 @@ CardName Game::withdrawPile(const int pile)
     {
         if (mLeftPile.empty())
         {
-            printf("mLeftPile is empty, can't withdraw!\n");
+            LOG(ERROR, "mLeftPile is empty, can't withdraw!");
             return INVALID_CARD;
         }
-        topCardOfPile = mLeftPile.top();
-        mLeftPile.pop();
+        topCardOfPile = mLeftPile.back();
+        mLeftPile.pop_back();
     }
     else if (pile == RIGHT_PILE)
     {
         if (mRightPile.empty())
         {
-            printf("mRightPile is empty, can't withdraw!\n");
+            LOG(ERROR, "mRightPile is empty, can't withdraw!");
             return INVALID_CARD;
         }
-        topCardOfPile = mRightPile.top();
-        mRightPile.pop();
+        topCardOfPile = mRightPile.back();
+        mRightPile.pop_back();
     }
     else
     {
-        printf("invalid pile %d, can't withdraw!\n", pile);
-        return CardName::INVALID_CARD;
+        LOG(ERROR, "invalid pile %d, can't withdraw!", pile);
+        return INVALID_CARD;
     }
+    LOG(INFO, "Withdraw %s Pile %s", (pile == LEFT_PILE ? "LeftPile" : "RightPile"), cardNameToString.at(topCardOfPile));
     return topCardOfPile;
 }
 
@@ -219,11 +274,15 @@ bool Game::insertPile(const CardName insertCard, const int pile)
     }
     if (pile == LEFT_PILE)
     {
-        mLeftPile.push(insertCard);
+        mLeftPile.push_back(insertCard);
     }
     else if (pile == RIGHT_PILE)
     {
-        mRightPile.push(insertCard);
+        mRightPile.push_back(insertCard);
+    }
+    else if (pile == MAIN_DECK)
+    {
+        mDeck.emplace(mDeck.begin(), insertCard);
     }
     else
     {
@@ -245,81 +304,191 @@ std::vector<Player *> Game::findWinner()
 {
 }
 
-bool Game::dealCardToEveryone()
+bool Game::dealsCardToPlayers()
 {
-    for (int i = 0; i < MAX_CARD_OF_PLAYER; i++)
+    LOG(INFO, "Deals cards to players");
+    /* TODO: Conceal Cards value is safer, currently I'm exposing it */
+    for (auto &pair : getAllPlayers())
     {
-        for (const auto& player : mPlayers)
+        Json::Value message;
+        message["MessageType"] = "GAME_DEALS_CARDS";
+        Json::Value cardsName(Json::arrayValue);
+        const int curPlayerHandSize = pair.second->getHand().size();
+        LOG(INFO, "Player %s is having %d cards in hand, need to deal %d more", pair.second->getName().c_str(), curPlayerHandSize, MAX_CARD_OF_PLAYER - curPlayerHandSize);
+        for (int i = 0; i < MAX_CARD_OF_PLAYER - curPlayerHandSize; i++)
         {
-            if (!mDeck.empty())
+            const CardName card = withdrawDeck();
+            if(!pair.second->addCardToHand(card))
             {
-                player.second->addCardToHand(mDeck.back());
-                mDeck.pop_back();
-            }
-            else
-            {
-                LOG(ERROR, "mDeck is empty, can't deal to player!");
                 return false;
             }
+            cardsName.append(getCardNameString(card));
         }
+        message["Cards"] = cardsName;
+        sendMessageToClient(jsonToString(message), pair.first);
     }
     return true;
 }
 
-bool Game::isPlayerNameTaken(const std::string& playerName) {
-    for (const auto& pair : mPlayers) {
-        if (pair.second->getName() == playerName) {
+bool Game::isPlayerNameTaken(const std::string &playerName)
+{
+    for (const auto &pair : mPlayers)
+    {
+        if (pair.second->getName() == playerName)
+        {
             return true;
         }
     }
     return false;
 }
 
-void Game::sendMessageToClient(const std::string& message, const int socketId) {
-    LOG(INFO, "Sending message to player %d: %s", socketId, message.c_str());
+void Game::sendMessageToClient(const std::string &message, const int socketId)
+{
+    // LOG(INFO, "Sending message to player %d: %s", socketId, message.c_str());
     Server::getInstance().sendToClient(message, socketId);
 }
 
-void Game::sendMessageToAll(const std::string& message) {
-    for (const auto& pair : mPlayers) {
+void Game::sendMessageToAll(const std::string &message)
+{
+    for (const auto &pair : mPlayers)
+    {
         Server::getInstance().sendToClient(message, pair.first);
     }
 }
 
-void Game::sendMessageToAllExclude(const std::string& message, const int socketId) {
-    for (const auto& pair : mPlayers) {
-        if (pair.first != socketId) {
+void Game::sendMessageToAllExclude(const std::string &message, const int socketId)
+{
+    for (const auto &pair : mPlayers)
+    {
+        if (pair.first != socketId)
+        {
             Server::getInstance().sendToClient(message, pair.first);
         }
     }
 }
 
-int Game::getPlayerSize(){
+int Game::getPlayerSize()
+{
     std::lock_guard<std::mutex> lock(mPlayerMutex);
     return mPlayers.size();
 }
-
-const std::list<std::pair<int, std::unique_ptr<Player>>>& Game::getAllPlayers() {
-    std::lock_guard<std::mutex> lock(mPlayerMutex);
+/**
+ * @brief socketID to Player object
+ *
+ * @return const std::list<std::pair<int, std::unique_ptr<Player>>>&
+ */
+const std::list<std::pair<int, std::unique_ptr<Player>>> &Game::getAllPlayers()
+{
     return mPlayers;
 }
 
-bool Game::isPlayerExists(const int socketId) {
+bool Game::isPlayerExists(const int socketId)
+{
     std::lock_guard<std::mutex> lock(mPlayerMutex);
-    for (const auto& pair : mPlayers) {
-        if (pair.first == socketId) {
+    for (const auto &pair : mPlayers)
+    {
+        if (pair.first == socketId)
+        {
             return true;
         }
     }
     return false;
 }
 
-bool Game::isAllPlayerReady() {
+bool Game::isAllPlayerReady()
+{
     std::lock_guard<std::mutex> lock(mPlayerMutex);
-    for (const auto& pair : mPlayers) {
-        if (pair.second->getState() != PLAYER_READY) {
+    for (const auto &pair : mPlayers)
+    {
+        if (pair.second->getState() != PLAYER_READY)
+        {
             return false;
         }
     }
     return true;
+}
+
+std::vector<CardName> &Game::getPile(const int pile)
+{
+    if (pile == LEFT_PILE)
+    {
+        return mLeftPile;
+    }
+    else if (pile == RIGHT_PILE)
+    {
+        return mRightPile;
+    }
+    else
+    {
+        LOG(ERROR, "invalid pile %d, can't get!", pile);
+        throw std::runtime_error("invalid pile " + std::to_string(pile) + ", can't get!");
+    }
+}
+
+/**
+ * @brief Increase mCurrentRound by 1. Check mPlayerOrder is empty and playerSheriffTimes is 0
+ *
+ * @return true
+ * @return false
+ */
+bool Game::isGameEnded()
+{
+    if (mPlayerSheriffTimes == 0 && mMerchantOrder.empty())
+    {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * @brief Change the sheriff to the next player
+ *
+ * @return int
+ */
+
+bool Game::isSheriffTransfer()
+{
+    /* TODO: Handle the situation when Player is playing then disconnect to internet */
+    if (mPlayerOrder.empty())
+    {
+        mPlayerSheriffTimes--;
+        int sheriffIndex = mSheriffIndex % mNumberOfPlayers;
+        mSheriffIndex++;
+
+        /* Get mSheriffSocketID */
+        auto it = mPlayers.begin();
+        std::advance(it, sheriffIndex);
+        if (it->second != nullptr)
+        {
+            mSheriffSocketID = it->first;
+            return true;
+        }
+        else
+        {
+            throw std::runtime_error("No valid players found to be sheriff");
+        }
+
+        return true;
+    }
+    return false;
+}
+
+int Game::getSheriffSocketID()
+{
+    return mSheriffSocketID;
+}
+
+int Game::getMerchantTurnSocketID()
+{
+    if (!mMerchantOrder.empty())
+    {
+        int merchantSocketID = mMerchantOrder.front();
+        mMerchantOrder.pop();
+        return merchantSocketID;
+    }
+    else
+    {
+        LOG(ERROR, "mMerchantOrder is empty, can't get merchant turn!");
+        return -1;
+    }
 }

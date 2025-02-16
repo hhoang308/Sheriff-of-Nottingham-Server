@@ -176,7 +176,7 @@ void Server::handleClient(int clientSocket) {
             break;
         }
         buffer[valRead] = '\0'; /* null-terminate the buffer */
-        LOG(INFO, "Message from client %d : %s", clientSocket, buffer);
+        LOG(INFO, "Message from socketID %d : %s", clientSocket, buffer);
 
         // if (send(clientSocket, buffer, valRead, 0) < 0) { // Echo message
         //     LOG(ERROR, "Send failed");
@@ -185,7 +185,7 @@ void Server::handleClient(int clientSocket) {
 
         if (curGame) {
             std::string str(buffer);
-            LOG(INFO, "Handling request");
+            // LOG(INFO, "Handling request");
             curGame->handleRequest(str, clientSocket);
         } else {
             LOG(ERROR, "Game not found for client!");
@@ -226,6 +226,25 @@ void Server::closeConnection(const int socketID) {
     shutdown(socketID, SHUT_RDWR);
     close(socketID);
     std::lock_guard<std::mutex> lock(mClientMutex);
+    Game* curGame = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mClientMutex);
+        if (mSocketIDToGame.find(socketID) != mSocketIDToGame.end()) {
+            curGame = mGames[mSocketIDToGame[socketID]].get();
+        }
+    }
+    if(curGame->getPlayerSize() == 1){
+        LOG(INFO, "All players disconnected, game is over!");
+        mGames.erase(mSocketIDToGame[socketID]);
+    }
+    {
+        std::lock_guard<std::mutex> lock(mClientMutex);
+        /* TODO : Find player in all game -> erase their data */
+        if (curGame) {
+            LOG(INFO, "Removing playerSocketID %d from game", socketID);
+            (void) curGame->removePlayer(socketID);
+        }
+    }
     mSocketIDToGame.erase(socketID);
 }
 
