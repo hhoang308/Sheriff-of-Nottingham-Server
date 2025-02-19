@@ -12,6 +12,7 @@ set(INCLUDE_DIRS
     include/controller
     include/utils
     include/interface
+    external
 )
 
 set(SERVER_SOURCES
@@ -21,13 +22,14 @@ set(SERVER_SOURCES
     src/model/Card.cpp
     src/utils/Utils.cpp
     src/model/GameStateMachine.cpp
+    external/json/jsoncpp.cpp
 )
 
 file(GLOB TEST_SOURCES test/*.cpp)
 
 find_package(Threads REQUIRED)
 
-set(LIBS pthread jsoncpp)
+set(LIBS pthread)
 
 if(BUILD_SERVER)
     add_executable(SheriffOfNottinghamServer

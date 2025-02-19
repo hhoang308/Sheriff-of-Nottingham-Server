@@ -9,7 +9,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <unordered_map>
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 #include "Game.h"
 #include "GameState.h"
 
@@ -17,35 +17,36 @@
 #define MAX_CLIENTS 1000
 #define BUFFER_SIZE 1024
 
-enum ServerState {
+enum ServerState
+{
     SERVER_WAITING,
     SERVER_READY
 };
 
-class Server {
+class Server
+{
 public:
-    static Server& getInstance();
+    static Server &getInstance();
 
     void start();
     void stop();
-    void sendToClient(const std::string& message, const int socketID);
-    void sendToAll(const std::string& message);
-    void sendToAllExcept(const std::string& message, const int socketID);
+    void sendToClient(const std::string &message, const int socketID);
+    void sendToAll(const std::string &message);
+    void sendToAllExcept(const std::string &message, const int socketID);
     void closeConnection(const int socketID);
 
     void addSocketIDToGame(const int socketID, const int gameID);
 
 private:
-
     Server();
     ~Server();
-    Server(const Server&) = delete;
-    Server& operator=(const Server&) = delete;
+    Server(const Server &) = delete;
+    Server &operator=(const Server &) = delete;
 
     bool init();
     void acceptClient();
     void handleClient(int clientSocket);
-    Game& getGame(const int gameID);
+    Game &getGame(const int gameID);
 
     int mServerSocket;
     sockaddr_in mServerAddress;
