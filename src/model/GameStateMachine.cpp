@@ -72,29 +72,6 @@ void WaitingForPlayersState::handleRequest(Game *curGame, const std::string &mes
         acceptMessage["MessageType"] = "GAME_ACCEPT_PLAYER";
         acceptMessage["PlayerName"] = playerName;
         curGame->sendMessageToClient(jsonToString(acceptMessage), socketID);
-
-        if (curGame->getPlayerSize() >= 1)
-        {
-
-            Json::Value connectedRecentlyMessage;
-            connectedRecentlyMessage["MessageType"] = "GAME_CONNECTED_PLAYER_RECENT";
-            Json::Value playersName(Json::arrayValue);
-            for (const auto& pair : curGame->getAllPlayers())
-            {
-                playersName.append(pair.second->getName());
-            }
-            connectedRecentlyMessage["PlayersName"] = playersName;
-
-            curGame->sendMessageToClient(jsonToString(connectedRecentlyMessage), socketID);
-
-
-            Json::Value notifyMessage;
-            notifyMessage["MessageType"] = "GAME_CONNECTED_PLAYER_NOW";
-            notifyMessage["PlayerName"] = playerName;
-            curGame->sendMessageToAllExclude(jsonToString(notifyMessage), socketID);
-        }
-
-        curGame->addPlayer(socketID, GAME_ID_DEFAULT, playerName);
     }
     else if (messageType == "PLAYER_READY")
     {
@@ -124,22 +101,33 @@ void WaitingForPlayersState::handleRequest(Game *curGame, const std::string &mes
     }
     else if (messageType == "PLAYER_RESPONSE")
     {
-        LOG(INFO, "Player %s response", curGame->getPlayer(socketID).getName().c_str());
-        // std::string reasonType = curJson["ReasonType"].asString();
-        // if(reasonType == "GAME_CONNECTED_PLAYER_RECENT"){
-        //     /* The new player can know the status (READY/UNREADY) of the previous players. */
-        //     for(const auto &pair : curGame->getAllPlayers())
-        //     {
-        //         if(pair.second->getState() == PLAYER_READY
-        //         && socketID != pair.first)
-        //         {
-        //             Json::Value playerConnectedState;
-        //             playerConnectedState["MessageType"] = "PLAYER_ACCEPT_READY";
-        //             playerConnectedState["PlayerName"] = pair.second->getName();
-        //             curGame->sendMessageToClient(jsonToString(playerConnectedState), socketID);
-        //         }
-        //     }
-        // }
+        std::string reasonType = curJson["ReasonType"].asString();
+        std::string playerName = curJson["PlayerName"].asString();
+        if (reasonType == "GAME_ACCEPT_PLAYER")
+        {
+            LOG(INFO, "Player %s response", playerName.c_str());
+
+            if (curGame->getPlayerSize() >= 1)
+            {
+                Json::Value connectedRecentlyMessage;
+                connectedRecentlyMessage["MessageType"] = "GAME_CONNECTED_PLAYER_RECENT";
+                Json::Value playersName(Json::arrayValue);
+                for (const auto &pair : curGame->getAllPlayers())
+                {
+                    playersName.append(pair.second->getName());
+                }
+                connectedRecentlyMessage["PlayersName"] = playersName;
+
+                curGame->sendMessageToClient(jsonToString(connectedRecentlyMessage), socketID);
+
+                Json::Value notifyMessage;
+                notifyMessage["MessageType"] = "GAME_CONNECTED_PLAYER_NOW";
+                notifyMessage["PlayerName"] = playerName;
+                curGame->sendMessageToAllExclude(jsonToString(notifyMessage), socketID);
+            }
+
+            curGame->addPlayer(socketID, GAME_ID_DEFAULT, playerName);
+        }
     }
     else
     {
@@ -327,9 +315,9 @@ void RoundStartedState::handleRequest(Game *curGame, const std::string &message,
         {
             Player &curPlayer = curGame->getPlayer(socketID);
             curPlayer.setState(PLAYER_RECEIVE_ROLE);
-            for(auto& pair : curGame->getAllPlayers())
+            for (auto &pair : curGame->getAllPlayers())
             {
-                if(pair.second->getState() != PLAYER_RECEIVE_ROLE)
+                if (pair.second->getState() != PLAYER_RECEIVE_ROLE)
                 {
                     return;
                 }
@@ -500,7 +488,8 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
         std::string pile = curJson["Pile"].asString();
         /* TODO: Handle situation card is invalid */
         CardName discardCard = stringToCardName.at(curJson["Card"].asString());
-        if(curPlayer.removeCardFromHand(discardCard)){
+        if (curPlayer.removeCardFromHand(discardCard))
+        {
             LOG(ERROR, "Invalid Card from hand");
             curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "INVALID_DISCARD_CARD"), socketID);
             return;
