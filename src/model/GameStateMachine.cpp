@@ -542,6 +542,7 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
 std::string MerchantTurnState::getStateName() const
 {
     LOG(INFO, "MerchantTurnState::getStateName()");
+    return "MerchantTurnState";
 }
 
 /**
