@@ -65,6 +65,7 @@ void WaitingForPlayersState::handleRequest(Game *curGame, const std::string &mes
         }
 
         LOG(INFO, "Player %s joined the game", playerName.c_str());
+        mPlayerNameTemp[socketID] = playerName;
 
         /* TODO: Handle new client or reconnect clients */
 
@@ -102,7 +103,7 @@ void WaitingForPlayersState::handleRequest(Game *curGame, const std::string &mes
     else if (messageType == "PLAYER_RESPONSE")
     {
         std::string reasonType = curJson["ReasonType"].asString();
-        std::string playerName = curJson["PlayerName"].asString();
+        std::string playerName = mPlayerNameTemp[socketID];
         if (reasonType == "GAME_ACCEPT_PLAYER")
         {
             LOG(INFO, "Player %s response", playerName.c_str());

@@ -1,10 +1,13 @@
 #include "GameState.h"
 #include <iostream>
+#include <unordered_map>
 
 void sendErrorMessage(int socketId, const std::string &messageType, const std::string &playerName, const std::string &reason);
 
 class WaitingForPlayersState : public GameState
 {
+private:
+    std::unordered_map<int, std::string> mPlayerNameTemp; /* socketID - playerName, before accept client */
 public:
     WaitingForPlayersState();
     ~WaitingForPlayersState();
