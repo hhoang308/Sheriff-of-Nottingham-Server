@@ -103,9 +103,10 @@ void WaitingForPlayersState::handleRequest(Game *curGame, const std::string &mes
     else if (messageType == "PLAYER_RESPONSE")
     {
         std::string reasonType = curJson["ReasonType"].asString();
-        std::string playerName = mPlayerNameTemp[socketID];
         if (reasonType == "GAME_ACCEPT_PLAYER")
         {
+            std::string playerName = mPlayerNameTemp[socketID];
+
             LOG(INFO, "Player %s response", playerName.c_str());
 
             if (curGame->getPlayerSize() >= 1)
@@ -128,6 +129,19 @@ void WaitingForPlayersState::handleRequest(Game *curGame, const std::string &mes
             }
 
             curGame->addPlayer(socketID, GAME_ID_DEFAULT, playerName);
+        }
+        else if (reasonType == "GAME_CONNECTED_PLAYER_RECENT")
+        {
+            for(auto &pair : curGame->getAllPlayers())
+            {
+                if(pair.second->getState() == PLAYER_READY)
+                {
+                    Json::Value message;
+                    message["MessageType"] = "GAME_ACCEPT_READY";
+                    message["PlayerName"] = pair.second->getName();
+                    curGame->sendMessageToClient(jsonToString(message), socketID);
+                }
+            }
         }
     }
     else
