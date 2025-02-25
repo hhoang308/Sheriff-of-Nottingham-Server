@@ -485,6 +485,7 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
         Json::Value message;
         message["MessageType"] = "MERCHANT_WITHDRAW_CARDS_RESPONSE";
         message["PlayerName"] = curPlayer.getName();
+        message["Pile"] = pile;
         CardName card;
         if (pile == "MAIN_PILE")
         {
@@ -493,10 +494,12 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
         else if (pile == "LEFT_DISCARD_PILE")
         {
             card = curGame->withdrawPile(LEFT_PILE);
+            message["Card"] = getCardNameString(card); /* Other player have to know if withdraw from DISCARD_PILE */
         }
         else if (pile == "RIGHT_DISCARD_PILE")
         {
             card = curGame->withdrawPile(RIGHT_PILE);
+            message["Card"] = getCardNameString(card); /* Other player have to know if withdraw from DISCARD_PILE */
         }
         else
         {
