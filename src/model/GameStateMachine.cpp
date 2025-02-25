@@ -303,6 +303,14 @@ void RoundStartedState::enterState(Game *curGame)
         message["PlayerName"] = sheriffName;
         message["Role"] = "SHERIFF";
         sheriffPlayer.setRole(SHERIFF);
+        for(auto &pair : curGame->getAllPlayers())
+        {
+            if(pair.first != sheriffSocketID)
+            {
+                pair.second->setRole(MERCHANT);
+                curGame->addMerchantOrder(pair.first);
+            }
+        }
         curGame->sendMessageToAll(jsonToString(message));
     }
     else
