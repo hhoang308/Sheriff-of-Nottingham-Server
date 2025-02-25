@@ -473,11 +473,18 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
     }
     else if (messageType == "MERCHANT_WITHDRAW_CARDS")
     {
+
+        if(curPlayer.getHand().size() >= MAX_CARD_OF_PLAYER)
+        {
+            LOG(ERROR, "Player %s withdraws maximum cards", curPlayer.getName().c_str());
+            curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "ENOUGH_CARD"), socketID);
+            return;
+        }
+
         std::string pile = curJson["Pile"].asString();
         Json::Value message;
         message["MessageType"] = "MERCHANT_WITHDRAW_CARDS_RESPONSE";
         message["PlayerName"] = curPlayer.getName();
-        message["Pile"] = pile;
         CardName card;
         if (pile == "MAIN_PILE")
         {
@@ -499,24 +506,39 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
         }
         if (curPlayer.addCardToHand(card))
         {
-            LOG(ERROR, "Player withdraws maximum cards");
-            curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "ENOUGH_CARD"), socketID);
+            LOG(ERROR, "Player can't withdraws card");
+            curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "INVALID_CARD"), socketID);
             return;
         }
+        curGame->sendMessageToAllExclude(jsonToString(message), socketID);
+
+        /* Hide Card from other players */
         message["Card"] = getCardNameString(card);
-        curGame->sendMessageToAll(jsonToString(message));
+        curGame->sendMessageToClient(jsonToString(message), socketID);
     }
     else if (messageType == "MERCHANT_DISCARD_CARDS")
     {
-        std::string pile = curJson["Pile"].asString();
-        /* TODO: Handle situation card is invalid */
-        CardName discardCard = stringToCardName.at(curJson["Card"].asString());
+        /*  Handle situation card is invalid */
+        std::string cardString = curJson["Card"].asString();
+        CardName discardCard = INVALID_CARD;
+        auto findCard = stringToCardName.find(cardString);
+        if (findCard == stringToCardName.end())
+        {
+            LOG(ERROR, "Invalid card '%s'", cardString.c_str());
+            curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "INVALID_DISCARD_CARD"), socketID);
+            return;
+        }else{
+            discardCard = findCard->second;
+        }
+
         if (curPlayer.removeCardFromHand(discardCard))
         {
             LOG(ERROR, "Invalid Card from hand");
-            curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "INVALID_DISCARD_CARD"), socketID);
+            curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "INVALID_DISCARD_CARD_IN_HAND"), socketID);
             return;
         }
+
+        std::string pile = curJson["Pile"].asString();
         if (pile == "LEFT_DISCARD_PILE")
         {
             curGame->insertPile(discardCard, LEFT_PILE);

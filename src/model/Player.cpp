@@ -78,7 +78,7 @@ bool Player::subtractGold(int amount)
 
 bool Player::addCardToHand(const CardName card)
 {
-    if (mPlayerHand.size() > MAX_CARD_OF_PLAYER)
+    if (card == INVALID_CARD)
     {
         return false;
     }
