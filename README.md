@@ -1,30 +1,27 @@
+## [Contribution] Commit message rule
+```
+<action> <subject> <optional extra information>
+
+- <additional information>
+```
 ## Precondition
 ### Install dependencies
 ```
 sudo apt-get update
 sudo apt-get install build-essential cmake pkg-config libgtest-dev
 ```
-## Commit message rule
-```
-<action> <subject> <optional extra information>
-```
 ## How to build the project
+### Clone the project
 ```
-# Clone the project
 git clone https://github.com/hhoang308/Sheriff-of-Nottingham-Server.git
-cd SheriffOfNottinghamServer
-# Install jsoncpp (in Ubuntu)
-git clone https://github.com/Microsoft/vcpkg.git
-cd vcpkg
-./bootstrap-vcpkg.sh
-./vcpkg integrate install
-./vcpkg install jsoncpp
-# [Optional] Clone googletest for unitest
-git clone https://github.com/google/googletest.git
-# Build the project
+```
+### Build the project
+```
 ./build.sh
-Options:
-default is --debug --server
+```
+default option is `--debug --server`
+```
+another options:
 --debug : Build Sheriff of Nottingham with full logs
 --release : Build Sheriff of Nottingham without debug logs
 --run : Build Sheriff of Nottingham and run it (if it success)
@@ -32,12 +29,17 @@ default is --debug --server
 --tests : Build unit tests of Sheriff of Nottingham
 --all : Build unit tests and Sheriff of Nottingham
 --clean : Clean build directory
-# Run the server
-./SheriffOfNottinghamServer
-# [Optional] Build both the project and unit tests
-cmake --build
-# [Optional] Execute unit tests
-./UnitTests
-or
+```
+### Run the server
+```
+./build.sh --run
+```
+### [Optional] Clone googletest for unitest
+```
+git clone https://github.com/google/googletest.git
+```
+then execute unit tests
+```
+cd build/
 ctest
 ```
