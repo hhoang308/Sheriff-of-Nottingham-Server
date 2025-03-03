@@ -4,42 +4,61 @@
 #include <iostream>
 #include <cstring>
 
-Server& Server::getInstance() {
+Server &Server::getInstance()
+{
     static Server instance;
     return instance;
 }
 
-Server::Server() : mServerState(SERVER_WAITING), mServerSocket(0) {
+Server::Server() : mServerState(SERVER_WAITING), mServerSocket(0)
+{
     LOG(INFO, "Server created!");
 }
 
-Server::~Server() {
+Server::~Server()
+{
     stop();
     LOG(INFO, "Server destroyed!");
 }
 
-Game& Server::getGame(const int gameID) {
+Game &Server::getGame(const int gameID)
+{
     return *(mGames.at(gameID));
 }
 
-bool Server::init() {
+bool Server::init()
+{
     mServerSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (mServerSocket < 0) {
+
+    if (mServerSocket < 0)
+    {
         LOG(ERROR, "Socket creation failed");
         return false;
     }
+
+#ifdef ENABLE_DEBUG
+    /* For DEBUG: reduce TCP TIME_WAIT */
+    int opt = 1;
+    if (setsockopt(mServerSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
+    {
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+    }
+#endif
 
     mServerAddress.sin_family = AF_INET;
     mServerAddress.sin_port = htons(SERVER_PORT);
     mServerAddress.sin_addr.s_addr = INADDR_ANY;
 
-    if (bind(mServerSocket, (struct sockaddr *)&mServerAddress, sizeof(mServerAddress)) < 0) {
+    if (bind(mServerSocket, (struct sockaddr *)&mServerAddress, sizeof(mServerAddress)) < 0)
+    {
         LOG(ERROR, "Bind failed");
         close(mServerSocket);
         return false;
     }
 
-    if (listen(mServerSocket, MAX_CLIENTS) < 0) {
+    if (listen(mServerSocket, MAX_CLIENTS) < 0)
+    {
         LOG(ERROR, "Listen failed");
         close(mServerSocket);
         return false;
@@ -50,40 +69,51 @@ bool Server::init() {
     return true;
 }
 
-void Server::start() {
-    if (!init()) return;
+void Server::start()
+{
+    if (!init())
+        return;
     std::thread(&Server::acceptClient, this).detach();
 
-    while (mServerState == SERVER_READY) {
+    while (mServerState == SERVER_READY)
+    {
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
 
-void Server::stop() {
+void Server::stop()
+{
     mServerState = SERVER_WAITING;
     LOG(INFO, "Server is stopping");
     close(mServerSocket);
 
     std::lock_guard<std::mutex> lock(mClientMutex);
-    for (auto &t : mClientThreads) {
-        if (t.joinable()) t.join();
+    for (auto &t : mClientThreads)
+    {
+        if (t.joinable())
+            t.join();
     }
     mClientThreads.clear();
 }
 
-void Server::acceptClient() {
+void Server::acceptClient()
+{
     socklen_t addrlen = sizeof(mServerAddress);
-    while (mServerState == SERVER_READY) {
+    while (mServerState == SERVER_READY)
+    {
         int client_socket = accept(mServerSocket, (struct sockaddr *)&mServerAddress, &addrlen);
-        if (client_socket < 0) {
-            if (mServerState == SERVER_WAITING) break; // Stop accepting if server state changes
+        if (client_socket < 0)
+        {
+            if (mServerState == SERVER_WAITING)
+                break; // Stop accepting if server state changes
             perror("Accept failed");
             continue;
         }
         /* TODO: 1 Game in 1 Server, remove when expanding sourcecode multiple games in 1 Server */
         {
             std::lock_guard<std::mutex> lock(mGamesMutex);
-            if (mGames.find(GAME_ID_DEFAULT) == mGames.end()) {
+            if (mGames.find(GAME_ID_DEFAULT) == mGames.end())
+            {
                 mGames.emplace(GAME_ID_DEFAULT, std::make_unique<Game>(GAME_ID_DEFAULT));
             }
         }
@@ -98,18 +128,26 @@ void Server::acceptClient() {
     }
 }
 
-void Server::handleClient(int clientSocket) {
+void Server::handleClient(int clientSocket)
+{
     char buffer[BUFFER_SIZE];
-    while (true) {
+    while (true)
+    {
         int valRead = read(clientSocket, buffer, BUFFER_SIZE - 1); /* Ensure space for null-terminator */
-        if (valRead < 0) {
-            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+        if (valRead < 0)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
                 LOG(WARNING, "Non-blocking socket has no data to read, retrying later.");
                 continue;
-            } else if (errno == EINTR) {
+            }
+            else if (errno == EINTR)
+            {
                 LOG(WARNING, "Read interrupted by signal, retrying.");
                 continue;
-            } else {
+            }
+            else
+            {
                 LOG(ERROR, "Read failed: %s", strerror(errno));
                 closeConnection(clientSocket);
                 break;
@@ -118,26 +156,26 @@ void Server::handleClient(int clientSocket) {
 
         /* Suspicious connection : https://github.com/hhoang308/Sheriff-of-Nottingham-Server/issues/8 */
         std::string rawMessage(buffer);
-        if(rawMessage.compare(0, 3, "GET") == 0
-        || rawMessage.compare(0, 3, "POST") == 0) {
+        if (rawMessage.compare(0, 3, "GET") == 0 || rawMessage.compare(0, 3, "POST") == 0)
+        {
             LOG(INFO, "Unknown request from client %d, close and remove it", clientSocket);
             shutdown(clientSocket, SHUT_RDWR);
             close(clientSocket);
             break;
         }
 
-        Game* curGame = nullptr;
+        Game *curGame = nullptr;
         {
             std::lock_guard<std::mutex> lock(mClientMutex);
-            if (mSocketIDToGame.find(clientSocket) != mSocketIDToGame.end()) {
+            if (mSocketIDToGame.find(clientSocket) != mSocketIDToGame.end())
+            {
                 curGame = mGames[mSocketIDToGame[clientSocket]].get();
             }
         }
 
         /* Handle the situation player join but the game has started */
-        if (curGame
-        && curGame->getCurrentState() != "WaitingForPlayersState"
-        && mSocketIDToGame.find(clientSocket) == mSocketIDToGame.end()) {
+        if (curGame && curGame->getCurrentState() != "WaitingForPlayersState" && mSocketIDToGame.find(clientSocket) == mSocketIDToGame.end())
+        {
             LOG(INFO, "Game has started, can't add playerName %d", clientSocket);
             Json::Value message;
             message["MessageType"] = "GAME_REJECT_PLAYER";
@@ -149,13 +187,16 @@ void Server::handleClient(int clientSocket) {
         }
 
         /* TODO: Handle the situation when all players disconect */
-        if (valRead == 0) {
-            if(curGame->getPlayerSize() == 1){
+        if (valRead == 0)
+        {
+            if (curGame->getPlayerSize() == 1)
+            {
                 LOG(INFO, "All players disconnected, game is over!");
                 mGames.erase(mSocketIDToGame[clientSocket]);
                 break;
             }
-            if(curGame->isPlayerExists(clientSocket)){
+            if (curGame->isPlayerExists(clientSocket))
+            {
                 Json::Value message;
                 message["MessageType"] = "GAME_DISCONNECT_PLAYER";
                 message["PlayerName"] = curGame->getPlayer(clientSocket).getName();
@@ -163,9 +204,10 @@ void Server::handleClient(int clientSocket) {
                 {
                     std::lock_guard<std::mutex> lock(mClientMutex);
                     /* TODO : Find player in all game -> erase their data */
-                    if (curGame) {
+                    if (curGame)
+                    {
                         LOG(INFO, "Removing playerSocketID %d from game", clientSocket);
-                        (void) curGame->removePlayer(clientSocket);
+                        (void)curGame->removePlayer(clientSocket);
                     }
                     mSocketIDToGame.erase(clientSocket);
                 }
@@ -183,66 +225,81 @@ void Server::handleClient(int clientSocket) {
         //     break;
         // }
 
-        if (curGame) {
+        if (curGame)
+        {
             std::string str(buffer);
             // LOG(INFO, "Handling request");
             curGame->handleRequest(str, clientSocket);
-        } else {
+        }
+        else
+        {
             LOG(ERROR, "Game not found for client!");
         }
     }
 }
 
-void Server::addSocketIDToGame(const int socketID, const int gameID) {
+void Server::addSocketIDToGame(const int socketID, const int gameID)
+{
     std::lock_guard<std::mutex> lock(mSocketIDToGameMutex);
     mSocketIDToGame[socketID] = gameID;
 }
 
-void Server::sendToClient(const std::string& message, const int socketID) {
+void Server::sendToClient(const std::string &message, const int socketID)
+{
     LOG(INFO, "Sending message to player %d: %s", socketID, message.c_str());
-    if (send(socketID, message.c_str(), message.size(), 0) < 0) {
+    if (send(socketID, message.c_str(), message.size(), 0) < 0)
+    {
         LOG(ERROR, "Send failed");
     }
 }
 
-void Server::sendToAll(const std::string& message) {
+void Server::sendToAll(const std::string &message)
+{
     std::lock_guard<std::mutex> lock(mClientMutex);
-    for (const auto& pair : mSocketIDToGame) {
+    for (const auto &pair : mSocketIDToGame)
+    {
         sendToClient(message, pair.first);
     }
 }
 
-void Server::sendToAllExcept(const std::string& message, const int socketID) {
+void Server::sendToAllExcept(const std::string &message, const int socketID)
+{
     std::lock_guard<std::mutex> lock(mClientMutex);
-    for (const auto& pair : mSocketIDToGame) {
-        if (pair.first != socketID) {
+    for (const auto &pair : mSocketIDToGame)
+    {
+        if (pair.first != socketID)
+        {
             sendToClient(message, pair.first);
         }
     }
 }
 
-void Server::closeConnection(const int socketID) {
+void Server::closeConnection(const int socketID)
+{
     LOG(INFO, "Closing connection for player %d", socketID);
     shutdown(socketID, SHUT_RDWR);
     close(socketID);
     std::lock_guard<std::mutex> lock(mClientMutex);
-    Game* curGame = nullptr;
+    Game *curGame = nullptr;
     {
         std::lock_guard<std::mutex> lock(mClientMutex);
-        if (mSocketIDToGame.find(socketID) != mSocketIDToGame.end()) {
+        if (mSocketIDToGame.find(socketID) != mSocketIDToGame.end())
+        {
             curGame = mGames[mSocketIDToGame[socketID]].get();
         }
     }
-    if(curGame->getPlayerSize() == 1){
+    if (curGame->getPlayerSize() == 1)
+    {
         LOG(INFO, "All players disconnected, game is over!");
         mGames.erase(mSocketIDToGame[socketID]);
     }
     {
         std::lock_guard<std::mutex> lock(mClientMutex);
         /* TODO : Find player in all game -> erase their data */
-        if (curGame) {
+        if (curGame)
+        {
             LOG(INFO, "Removing playerSocketID %d from game", socketID);
-            (void) curGame->removePlayer(socketID);
+            (void)curGame->removePlayer(socketID);
         }
     }
     mSocketIDToGame.erase(socketID);

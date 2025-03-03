@@ -40,7 +40,7 @@ if(BUILD_SERVER)
     target_link_libraries(SheriffOfNottinghamServer PRIVATE ${LIBS})
 
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        target_compile_definitions(SheriffOfNottinghamServer PRIVATE ENABLE_DEBUG_LOGS)
+        target_compile_definitions(SheriffOfNottinghamServer PRIVATE ENABLE_DEBUG)
     endif()
 
 endif()
