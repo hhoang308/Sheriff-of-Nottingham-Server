@@ -262,7 +262,7 @@ CardName Game::withdrawPile(const int pile)
         LOG(ERROR, "invalid pile %d, can't withdraw!", pile);
         return INVALID_CARD;
     }
-    LOG(INFO, "Withdraw %s Pile %s", (pile == LEFT_PILE ? "LeftPile" : "RightPile"), cardNameToString.at(topCardOfPile));
+    LOG(INFO, "Withdraw %s Pile %s", (pile == LEFT_PILE ? "LeftPile" : "RightPile"), cardNameToString.at(topCardOfPile).c_str());
     return topCardOfPile;
 }
 
@@ -318,7 +318,7 @@ bool Game::dealsCardToPlayers()
         for (int i = 0; i < MAX_CARD_OF_PLAYER - curPlayerHandSize; i++)
         {
             const CardName card = withdrawDeck();
-            if(!pair.second->addCardToHand(card))
+            if (!pair.second->addCardToHand(card))
             {
                 return false;
             }
@@ -491,4 +491,51 @@ int Game::getMerchantTurnSocketID()
         LOG(ERROR, "mMerchantOrder is empty, can't get merchant turn!");
         return -1;
     }
+}
+
+Bag &Game::getBag()
+{
+    return mBag;
+}
+
+bool Game::setBag(const std::vector<CardName> &bagCards, const int bribe, const CardName declared, const std::string owner)
+{
+    mBag.mBagBribe = bribe;
+    mBag.mBagDeclared = declared;
+    mBag.mBagCards = bagCards;
+    mBag.mBagOwner = owner;
+    return true;
+}
+
+bool Game::clearBag()
+{
+    (void)mBag.clearBag();
+    return true;
+}
+
+/**
+ * @brief This function will return 0 if the Merchant tells the truth, otherwise return the penalty
+ *
+ * @return int
+ */
+int Bag::calculatePenalty()
+{
+    int penalty = 0;
+    for (const auto &pair : mBagCards)
+    {
+        if (pair != mBagDeclared)
+        {
+            penalty += cardPenalty.at(pair);
+        }
+    }
+    return penalty;
+}
+
+bool Bag::clearBag()
+{
+    mBagCards.clear();
+    mBagBribe = 0;
+    mBagOwner = "";
+    mBagDeclared = INVALID_CARD;
+    return true;
 }

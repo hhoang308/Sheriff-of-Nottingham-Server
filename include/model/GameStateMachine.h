@@ -55,7 +55,16 @@ public:
 class MerchantTurnState : public GameState
 {
 private:
+    enum MerchantState
+    {
+        MERCHANT_IDLE,
+        MERCHANT_READY_TO_RECEIVE,
+        MERCHANT_IS_RENDERING,
+    };
+
     int mMerchantSocketID;
+    int mNumberOfCards;
+    MerchantState mMerchantState;
 
 public:
     MerchantTurnState();

@@ -132,9 +132,9 @@ void WaitingForPlayersState::handleRequest(Game *curGame, const std::string &mes
         }
         else if (reasonType == "GAME_CONNECTED_PLAYER_RECENT")
         {
-            for(auto &pair : curGame->getAllPlayers())
+            for (auto &pair : curGame->getAllPlayers())
             {
-                if(pair.second->getState() == PLAYER_READY)
+                if (pair.second->getState() == PLAYER_READY)
                 {
                     Json::Value message;
                     message["MessageType"] = "GAME_ACCEPT_READY";
@@ -303,9 +303,9 @@ void RoundStartedState::enterState(Game *curGame)
         message["PlayerName"] = sheriffName;
         message["Role"] = "SHERIFF";
         sheriffPlayer.setRole(SHERIFF);
-        for(auto &pair : curGame->getAllPlayers())
+        for (auto &pair : curGame->getAllPlayers())
         {
-            if(pair.first != sheriffSocketID)
+            if (pair.first != sheriffSocketID)
             {
                 pair.second->setRole(MERCHANT);
                 curGame->addMerchantOrder(pair.first);
@@ -424,6 +424,8 @@ void MerchantTurnState::enterState(Game *curGame)
 {
     LOG(INFO, "MerchantTurnState::enterState()");
     mMerchantSocketID = curGame->getMerchantTurnSocketID();
+    curGame->getPlayer(mMerchantSocketID).setState(PLAYER_TRADING);
+    mMerchantState = MERCHANT_IDLE;
     if (mMerchantSocketID == -1)
     {
         /* TODO: Handle this situation */
@@ -446,13 +448,35 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
         return;
     }
 
+    std::string messageType = curJson["MessageType"].asString();
+    if (messageType == "PLAYER_RESPONSE")
+    {
+        std::string reasonType = curJson["ReasonType"].asString();
+        if (reasonType == "GAME_START_TURN")
+        {
+            LOG(INFO, "Player %s is trading", curGame->getPlayer(mMerchantSocketID).getName().c_str());
+            return;
+        }
+        else if (reasonType == "MERCHANT_WITHDRAW_CARDS_RESPONSE" && socketID == mMerchantSocketID)
+        {
+            LOG(INFO, "Merchant render done");
+            mMerchantState = MERCHANT_READY_TO_RECEIVE;
+            return;
+        }
+        else
+        {
+            LOG(ERROR, "Invalid reasonType '%s'", reasonType.c_str());
+            return;
+        }
+    }
+
     if (socketID != mMerchantSocketID)
     {
         LOG(ERROR, "It isn't your turn");
         curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curGame->getPlayer(socketID).getName(), "NOT_YOUR_TURN"), socketID);
         return;
     }
-
+    /* socketID = mMerchantSocketID */
     Player &curPlayer = curGame->getPlayer(socketID);
     if (curPlayer.getState() != PLAYER_TRADING)
     {
@@ -460,21 +484,33 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
         curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "INVALID_STATE"), socketID);
         return;
     }
-    std::string messageType = curJson["MessageType"].asString();
-    if (messageType == "PLAYER_RESPONSE")
+
+    if (messageType == "MERCHANT_DISCARD_REQUEST")
     {
-        std::string reasonType = curJson["ReasonType"].asString();
-        if (reasonType == "GAME_START_TURN")
+        mNumberOfCards = curJson["NumberOfCards"].asInt();
+        if (mNumberOfCards < 1 || mNumberOfCards > MAX_CARD_OF_PLAYER)
         {
-            curPlayer.setState(PLAYER_TRADING);
-            LOG(INFO, "Player %s is trading", curPlayer.getName().c_str());
+            LOG(ERROR, "Invalid number of cards %d", mNumberOfCards);
+            curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "INVALID_NUMBER_OF_CARDS"), socketID);
             return;
         }
+        mMerchantState = MERCHANT_READY_TO_RECEIVE;
+        Json::Value discardMessage;
+        discardMessage["MessageType"] = "MERCHANT_DISCARD_REQUEST_RESPONSE";
+        discardMessage["PlayerName"] = curPlayer.getName();
+        curGame->sendMessageToClient(jsonToString(discardMessage), socketID);
     }
     else if (messageType == "MERCHANT_WITHDRAW_CARDS")
     {
+        if (mMerchantState != MERCHANT_READY_TO_RECEIVE)
+        {
+            LOG(INFO, "Merchant requests too fast");
+            curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "TOO_FAST"), socketID);
+            return;
+        }
+        mMerchantState = MERCHANT_IS_RENDERING;
 
-        if(curPlayer.getHand().size() >= MAX_CARD_OF_PLAYER)
+        if (curPlayer.getHand().size() >= MAX_CARD_OF_PLAYER + mNumberOfCards)
         {
             LOG(ERROR, "Player %s withdraws maximum cards", curPlayer.getName().c_str());
             curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "ENOUGH_CARD"), socketID);
@@ -482,24 +518,24 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
         }
 
         std::string pile = curJson["Pile"].asString();
-        Json::Value message;
-        message["MessageType"] = "MERCHANT_WITHDRAW_CARDS_RESPONSE";
-        message["PlayerName"] = curPlayer.getName();
-        message["Pile"] = pile;
+        Json::Value withdrawResponse;
+        withdrawResponse["MessageType"] = "MERCHANT_WITHDRAW_CARDS_RESPONSE";
+        withdrawResponse["PlayerName"] = curPlayer.getName();
+        withdrawResponse["Pile"] = pile;
         CardName card;
-        if (pile == "MAIN_PILE")
+        if (pile == "MAIN_DECK")
         {
             card = curGame->withdrawDeck();
         }
         else if (pile == "LEFT_DISCARD_PILE")
         {
             card = curGame->withdrawPile(LEFT_PILE);
-            message["Card"] = getCardNameString(card); /* Other player have to know if withdraw from DISCARD_PILE */
+            withdrawResponse["Card"] = getCardNameString(card); /* Other player have to know if withdraw from DISCARD_PILE */
         }
         else if (pile == "RIGHT_DISCARD_PILE")
         {
             card = curGame->withdrawPile(RIGHT_PILE);
-            message["Card"] = getCardNameString(card); /* Other player have to know if withdraw from DISCARD_PILE */
+            withdrawResponse["Card"] = getCardNameString(card); /* Other player have to know if withdraw from DISCARD_PILE */
         }
         else
         {
@@ -507,17 +543,17 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
             curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "INVALID_PILE"), socketID);
             return;
         }
-        if (curPlayer.addCardToHand(card))
+        if (!curPlayer.addCardToHand(card))
         {
             LOG(ERROR, "Player can't withdraws card");
             curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "INVALID_CARD"), socketID);
             return;
         }
-        curGame->sendMessageToAllExclude(jsonToString(message), socketID);
+        curGame->sendMessageToAllExclude(jsonToString(withdrawResponse), socketID);
 
         /* Hide Card from other players */
-        message["Card"] = getCardNameString(card);
-        curGame->sendMessageToClient(jsonToString(message), socketID);
+        withdrawResponse["Card"] = getCardNameString(card);
+        curGame->sendMessageToClient(jsonToString(withdrawResponse), socketID);
     }
     else if (messageType == "MERCHANT_DISCARD_CARDS")
     {
@@ -530,7 +566,9 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
             LOG(ERROR, "Invalid card '%s'", cardString.c_str());
             curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "INVALID_DISCARD_CARD"), socketID);
             return;
-        }else{
+        }
+        else
+        {
             discardCard = findCard->second;
         }
 
@@ -556,15 +594,18 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
             return;
         }
 
-        Json::Value message;
-        message["MessageType"] = "MERCHANT_DISCARD_CARDS_RESPONSE";
-        message["PlayerName"] = curPlayer.getName();
-        message["Pile"] = pile;
-        message["Card"] = cardNameToString.at(discardCard);
-        curGame->sendMessageToAll(jsonToString(message));
+        Json::Value discardResponse;
+        discardResponse["MessageType"] = "MERCHANT_DISCARD_CARDS_RESPONSE";
+        discardResponse["PlayerName"] = curPlayer.getName();
+        discardResponse["Pile"] = pile;
+        discardResponse["Card"] = cardNameToString.at(discardCard);
+        curGame->sendMessageToAll(jsonToString(discardResponse));
     }
     else if (messageType == "MERCHANT_GIVE_BAG")
     {
+        // const std::string owner = curJson["Owner"].asString();
+        // const int bribe = curJson["Bribe"].asInt();
+        // const std::string declared = curJson["Declared"].asString();
         curGame->setState(new SheriffTurnState());
     }
     else

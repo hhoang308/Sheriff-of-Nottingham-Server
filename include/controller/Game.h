@@ -25,6 +25,16 @@
 
 #define GAME_ID_DEFAULT 1234
 
+struct Bag
+{
+    std::vector<CardName> mBagCards;
+    int mBagBribe;
+    CardName mBagDeclared;
+    std::string mBagOwner;
+
+    int calculatePenalty();
+    bool clearBag();
+};
 class Game
 {
 private:
@@ -46,6 +56,7 @@ private:
     std::vector<CardName> mRightPile;
     std::vector<CardName> mDeck;
     std::queue<Player *> mPlayerOrder;
+    Bag mBag;
 
 public:
     Game(const int gameId);
@@ -86,6 +97,10 @@ public:
     CardName withdrawPile(const int pile);
     bool insertPile(const CardName insertCard, const int pile);
     std::vector<Player *> findWinner();
+
+    Bag &getBag();
+    bool clearBag();
+    bool setBag(const std::vector<CardName> &bagCards, const int bribe, const CardName declared, const std::string owner);
 
     void sendMessageToClient(const std::string &message, const int socketId);
     void sendMessageToAll(const std::string &message);
