@@ -465,7 +465,7 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
         }
         else
         {
-            LOG(ERROR, "Invalid reasonType '%s'", reasonType.c_str());
+            LOG(ERROR, "Not handle reasonType '%s'", reasonType.c_str());
             return;
         }
     }
@@ -572,7 +572,7 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
             discardCard = findCard->second;
         }
 
-        if (curPlayer.removeCardFromHand(discardCard))
+        if (!curPlayer.removeCardFromHand(discardCard))
         {
             LOG(ERROR, "Invalid Card from hand");
             curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "INVALID_DISCARD_CARD_IN_HAND"), socketID);
@@ -603,9 +603,25 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
     }
     else if (messageType == "MERCHANT_GIVE_BAG")
     {
-        // const std::string owner = curJson["Owner"].asString();
-        // const int bribe = curJson["Bribe"].asInt();
-        // const std::string declared = curJson["Declared"].asString();
+        const std::string owner = curJson["PlayerName"].asString();
+        const int bribe = curJson["Fee"].asInt();
+        const CardName declared = stringToCardName.at(curJson["Report"].asString());
+        std::vector<CardName> bagCards;
+        for (const auto &item : curJson["Bag"])
+        {
+            bagCards.push_back(stringToCardName.at(item.asString()));
+        }
+        if (!curGame->setBag(bagCards, bribe, declared, owner))
+        {
+            LOG(ERROR, "Invalid bag");
+            curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "INVALID_BAG"), socketID);
+            return;
+        }
+        curPlayer.setState(PLAYER_RECEIVE_CARDS);
+        Json::Value bagResponse;
+        bagResponse["MessageType"] = "MERCHANT_GIVE_BAG_RESPONSE";
+        bagResponse["PlayerName"] = curPlayer.getName();
+        curGame->sendMessageToClient(jsonToString(bagResponse), socketID);
         curGame->setState(new SheriffTurnState());
     }
     else
@@ -615,7 +631,6 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
 }
 std::string MerchantTurnState::getStateName() const
 {
-    LOG(INFO, "MerchantTurnState::getStateName()");
     return "MerchantTurnState";
 }
 
@@ -634,14 +649,91 @@ SheriffTurnState::~SheriffTurnState()
 void SheriffTurnState::handleRequest(Game *curGame, const std::string &message, const int socketID)
 {
     LOG(INFO, "SheriffTurnState::handleRequest() socketID %d message '%s' ", socketID, message.c_str());
+    Json::Value curJson = stringToJson(message);
+
+    if (curJson.empty())
+    {
+        LOG(ERROR, "Invalid JSON message '%s'", message.c_str());
+        return;
+    }
+
+    std::string messageType = curJson["MessageType"].asString();
+    if (messageType == "PLAYER_RESPONSE")
+    {
+        std::string reasonType = curJson["ReasonType"].asString();
+        if (reasonType == "SHERIFF_CHECK_RESPONSE")
+        {
+            return;
+        }
+        else if (reasonType == "SHERIFF_PASS_REPONSE")
+        {
+            return;
+        }
+        else
+        {
+            LOG(ERROR, "Not handle reasonType '%s'", reasonType.c_str());
+            return;
+        }
+    }
+
+    if (socketID != mSheriffSocketID)
+    {
+        LOG(ERROR, "It isn't your turn");
+        curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curGame->getPlayer(socketID).getName(), "NOT_YOUR_TURN"), socketID);
+        return;
+    }
+    /* socketID = mSheriffSocketID */
+    Player &curPlayer = curGame->getPlayer(socketID);
+    if (curPlayer.getState() != PLAYER_INSPECTING)
+    {
+        LOG(ERROR, "Player %s is not in the right state", curPlayer.getName().c_str());
+        curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "INVALID_STATE"), socketID);
+        return;
+    }
+    Bag curBag = curGame->getBag();
+
+    Json::Value forwardMessage;
+    forwardMessage["PlayerName"] = curBag.mBagOwner;
+    forwardMessage["Fee"] = curBag.mBagBribe;
+    forwardMessage["Report"] = cardNameToString.at(curBag.mBagDeclared);
+    Json::Value bagCards(Json::arrayValue);
+    for (const auto &card : curBag.mBagCards)
+    {
+        bagCards.append(cardNameToString.at(card));
+    }
+    forwardMessage["Bag"] = bagCards;
+
+    if (messageType == "SHERIFF_CHECK")
+    {
+        forwardMessage["MessageType"] = "SHERIFF_CHECK_RESPONSE";
+    }
+    else if (messageType == "SHERIFF_PASS")
+    {
+        forwardMessage["MessageType"] = "SHERIFF_PASS_REPONSE";
+    }
+    else
+    {
+        LOG(ERROR, "Invalid message type '%s'", messageType.c_str());
+    }
+    curPlayer.setState(PLAYER_RECEIVE_CARDS);
+    curGame->sendMessageToAll(jsonToString(forwardMessage));
+    curGame->setState(new MerchantTurnState());
 }
 void SheriffTurnState::enterState(Game *curGame)
 {
     LOG(INFO, "SheriffTurnState::enterState()");
+    mSheriffSocketID = curGame->getSheriffSocketID();
+    Player curPlayer = curGame->getPlayer(mSheriffSocketID);
+    LOG(INFO, "Sheriff %s is checking bag", curPlayer.getName().c_str());
+    curPlayer.setState(PLAYER_INSPECTING);
+    Json::Value message;
+    message["MessageType"] = "GAME_START_TURN";
+    message["PlayerName"] = curPlayer.getName();
+    curGame->sendMessageToAll(jsonToString(message));
 }
 std::string SheriffTurnState::getStateName() const
 {
-    LOG(INFO, "SheriffTurnState::getStateName()");
+    return "SheriffTurnState";
 }
 
 /**
@@ -665,8 +757,12 @@ void GameEndedState::enterState(Game *curGame)
 {
     LOG(INFO, "GameEndedState::enterState()");
     /* TODO: Calculate who is the winner */
+    Json::Value endGameMessage;
+    endGameMessage["MessageType"] = "GAME_END";
+    /* TODO: change state of all players and disconnect all of them */
+    curGame->sendMessageToAll(jsonToString(endGameMessage));
 }
 std::string GameEndedState::getStateName() const
 {
-    LOG(INFO, "GameEndedState::getStateName()");
+    return "GameEndedState";
 }

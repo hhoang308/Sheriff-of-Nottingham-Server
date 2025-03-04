@@ -498,12 +498,23 @@ Bag &Game::getBag()
     return mBag;
 }
 
-bool Game::setBag(const std::vector<CardName> &bagCards, const int bribe, const CardName declared, const std::string owner)
+bool Game::setBag(std::vector<CardName> &bagCards, const int bribe, const CardName declared, const std::string owner)
 {
     mBag.mBagBribe = bribe;
     mBag.mBagDeclared = declared;
     mBag.mBagCards = bagCards;
     mBag.mBagOwner = owner;
+#ifdef ENABLE_DEBUG
+    std::string bagCardsString = "";
+    for (const auto &card : bagCards)
+    {
+        bagCardsString += cardNameToString.at(card) + ", ";
+    }
+    bagCardsString.pop_back();
+    bagCardsString.pop_back();
+
+    LOG(INFO, "Bag's info: mBagBribe %d, mBagDeclared %s, mBagCards [%s], mBagOwner %s", bribe, cardNameToString.at(declared).c_str(), bagCardsString.c_str(), owner.c_str());
+#endif
     return true;
 }
 

@@ -100,7 +100,7 @@ public:
 
     Bag &getBag();
     bool clearBag();
-    bool setBag(const std::vector<CardName> &bagCards, const int bribe, const CardName declared, const std::string owner);
+    bool setBag(std::vector<CardName> &bagCards, const int bribe, const CardName declared, const std::string owner);
 
     void sendMessageToClient(const std::string &message, const int socketId);
     void sendMessageToAll(const std::string &message);

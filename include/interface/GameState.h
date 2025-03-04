@@ -9,6 +9,7 @@ class Game;
 class GameState
 {
 public:
+    /* TODO: Handle the situation when 'message' doesn't contain type, which will crash the system*/
     virtual void handleRequest(Game *server, const std::string &message, const int socketID) = 0;
     virtual void enterState(Game *server) = 0;
     virtual std::string getStateName() const = 0;

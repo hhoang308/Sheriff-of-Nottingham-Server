@@ -76,6 +76,9 @@ public:
 
 class SheriffTurnState : public GameState
 {
+private:
+    int mSheriffSocketID;
+
 public:
     SheriffTurnState();
     ~SheriffTurnState();
