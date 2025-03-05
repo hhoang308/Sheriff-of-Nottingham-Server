@@ -95,14 +95,14 @@ bool Game::removePlayer(int socketId)
 
 Player &Game::getPlayer(int socketId)
 {
-    LOG(INFO, "getPlayer() %d", socketId);
+    // LOG(INFO, "getPlayer() %d", socketId);
     std::lock_guard<std::mutex> lock(mPlayerMutex);
 
     for (auto &pair : mPlayers)
     {
         if (pair.first == socketId)
         {
-            LOG(INFO, "Player with socketID %d found", socketId);
+            // LOG(INFO, "Player with socketID %d found", socketId);
             return *(pair.second);
         }
     }

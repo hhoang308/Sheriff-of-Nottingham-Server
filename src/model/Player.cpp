@@ -29,6 +29,7 @@ bool Player::setRole(Role newRole)
 
 bool Player::setState(PlayerState newState)
 {
+    // LOG(INFO, "Player %s state changed to %d", mPlayerName.c_str(), newState);
     mPlayerState = newState;
     return true;
 }

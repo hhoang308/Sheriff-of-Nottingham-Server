@@ -25,6 +25,7 @@ enum PlayerState
     /* Merchant */
     PLAYER_TRADING,
     PLAYER_SEND_BAG,
+    PLAYER_RECEIVE_BAG,
     /* Sheriff */
     PLAYER_INSPECTING,
 
