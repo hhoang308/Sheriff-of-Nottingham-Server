@@ -738,12 +738,12 @@ void SheriffTurnState::handleRequest(Game *curGame, const std::string &message, 
     forwardMessage["PlayerName"] = curBag.mBagOwner;
     // forwardMessage["Fee"] = curBag.mBagBribe;
     // forwardMessage["Report"] = cardNameToString.at(curBag.mBagDeclared);
-    // Json::Value bagCards(Json::arrayValue);
-    // for (const auto &card : curBag.mBagCards)
-    // {
-    //     bagCards.append(cardNameToString.at(card));
-    // }
-    // forwardMessage["Bag"] = bagCards;
+    Json::Value bagCards(Json::arrayValue);
+    for (const auto &card : curBag.mBagCards)
+    {
+        bagCards.append(cardNameToString.at(card));
+    }
+    forwardMessage["Bag"] = bagCards;
 
     if (messageType == "SHERIFF_CHECK")
     {
