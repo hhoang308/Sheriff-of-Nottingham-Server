@@ -34,7 +34,7 @@ WaitingForPlayersState::~WaitingForPlayersState()
 
 void WaitingForPlayersState::handleRequest(Game *curGame, const std::string &message, const int socketID)
 {
-    LOG(INFO, "WaitingForPlayersState socketID %d message '%s' ", socketID, message.c_str());
+    // LOG(INFO, "WaitingForPlayersState socketID %d message '%s' ", socketID, message.c_str());
     /* TODO: Handle error when parse string failed */
     Json::Value curJson = stringToJson(message);
     if (curJson.empty())
@@ -451,7 +451,7 @@ void MerchantTurnState::enterState(Game *curGame)
 }
 void MerchantTurnState::handleRequest(Game *curGame, const std::string &message, const int socketID)
 {
-    LOG(INFO, "MerchantTurnState::handleRequest() socketID %d message '%s' ", socketID, message.c_str());
+    // LOG(INFO, "MerchantTurnState::handleRequest() socketID %d message '%s' ", socketID, message.c_str());
     Json::Value curJson = stringToJson(message);
     Player &curPlayer = curGame->getPlayer(socketID);
 
@@ -741,7 +741,7 @@ void SheriffTurnState::enterState(Game *curGame)
 }
 void SheriffTurnState::handleRequest(Game *curGame, const std::string &message, const int socketID)
 {
-    LOG(INFO, "SheriffTurnState::handleRequest() socketID %d message '%s' ", socketID, message.c_str());
+    // LOG(INFO, "SheriffTurnState::handleRequest() socketID %d message '%s' ", socketID, message.c_str());
     Json::Value curJson = stringToJson(message);
     Player &curPlayer = curGame->getPlayer(socketID);
 
@@ -766,14 +766,17 @@ void SheriffTurnState::handleRequest(Game *curGame, const std::string &message, 
             return;
         }
         std::string reasonType = curJson["ReasonType"].asString();
-        if (reasonType == "SHERIFF_CHECK_RESPONSE")
+        if (reasonType == "SHERIFF_CHECK_RESPONSE" || reasonType == "SHERIFF_PASS_RESPONSE")
         {
-            // curGame->setState(new MerchantTurnState());
-            return;
-        }
-        else if (reasonType == "SHERIFF_PASS_REPONSE")
-        {
-            // curGame->setState(new MerchantTurnState());
+            curPlayer.setState(PLAYER_RECEIVED_CHECK);
+            for (const auto &player : curGame->getAllPlayers())
+            {
+                if (player.second->getState() != PLAYER_RECEIVED_CHECK)
+                {
+                    return;
+                }
+            }
+            curGame->setState(new MerchantTurnState());
             return;
         }
         else if (reasonType == "GAME_START_TURN" && socketID == mSheriffSocketID)
@@ -820,7 +823,7 @@ void SheriffTurnState::handleRequest(Game *curGame, const std::string &message, 
     }
     else if (messageType == "SHERIFF_PASS")
     {
-        forwardMessage["MessageType"] = "SHERIFF_PASS_REPONSE";
+        forwardMessage["MessageType"] = "SHERIFF_PASS_RESPONSE";
     }
     else
     {

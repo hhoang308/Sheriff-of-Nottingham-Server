@@ -29,6 +29,7 @@ enum PlayerState
     /* Sheriff */
     PLAYER_INSPECTING,
 
+    PLAYER_RECEIVED_CHECK,
     PLAYER_RECEIVING,
     PLAYER_INVALID_STATE
 };
