@@ -197,15 +197,22 @@ void GameStartedState::enterState(Game *curGame)
 void GameStartedState::handleRequest(Game *curGame, const std::string &message, const int socketID)
 {
     Json::Value curJson = stringToJson(message);
-    if (curJson.empty())
+
+    if (curJson.empty() || !curJson.isMember("MessageType") || curJson["MessageType"].isNull())
     {
-        LOG(ERROR, "Invalid JSON message '%s'", message.c_str());
+        LOG(ERROR, "No MessageType");
         return;
     }
+
     std::string messageType = curJson["MessageType"].asString();
     if (messageType == "PLAYER_RESPONSE")
     {
         LOG(INFO, "Player %s response", curGame->getPlayer(socketID).getName().c_str());
+        if (curJson["ReasonType"].isNull() || curJson["ReasonType"].isNull())
+        {
+            LOG(ERROR, "No ReasonType ");
+            return;
+        }
         std::string reasonType = curJson["ReasonType"].asString();
         if (reasonType == "GAME_START")
         {
@@ -323,9 +330,9 @@ void RoundStartedState::handleRequest(Game *curGame, const std::string &message,
 {
     Json::Value curJson = stringToJson(message);
 
-    if (curJson.empty())
+    if (curJson.empty() || !curJson.isMember("MessageType") || curJson["MessageType"].isNull())
     {
-        LOG(ERROR, "Invalid JSON message '%s'", message.c_str());
+        LOG(ERROR, "No MessageType ");
         return;
     }
 
@@ -333,6 +340,11 @@ void RoundStartedState::handleRequest(Game *curGame, const std::string &message,
     if (messageType == "PLAYER_RESPONSE")
     {
         LOG(INFO, "Player %s response", curGame->getPlayer(socketID).getName().c_str());
+        if (!curJson.isMember("ReasonType") || curJson["ReasonType"].isNull())
+        {
+            LOG(ERROR, "No ReasonType ");
+            return;
+        }
         std::string reasonType = curJson["ReasonType"].asString();
         if (reasonType == "GAME_DEALS_ROLE")
         {
@@ -443,7 +455,7 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
     Json::Value curJson = stringToJson(message);
     Player &curPlayer = curGame->getPlayer(socketID);
 
-    if (curJson.empty())
+    if (curJson.empty() || !curJson.isMember("MessageType") || curJson["MessageType"].isNull())
     {
         LOG(ERROR, "Invalid JSON message '%s'", message.c_str());
         return;
@@ -452,6 +464,11 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
     std::string messageType = curJson["MessageType"].asString();
     if (messageType == "PLAYER_RESPONSE")
     {
+        if (!curJson.isMember("ReasonType") || curJson["ReasonType"].isNull())
+        {
+            LOG(ERROR, "No ReasonType");
+            return;
+        }
         std::string reasonType = curJson["ReasonType"].asString();
         if (reasonType == "GAME_START_TURN")
         {
@@ -501,6 +518,11 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
 
     if (messageType == "MERCHANT_DISCARD_REQUEST")
     {
+        if (!curJson.isMember("NumberOfCards") || curJson["NumberOfCards"].isNull())
+        {
+            LOG(ERROR, "No NumberOfCards");
+            return;
+        }
         mNumberOfCards = curJson["NumberOfCards"].asInt();
         if (mNumberOfCards < 1 || mNumberOfCards > MAX_CARD_OF_PLAYER)
         {
@@ -528,6 +550,12 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
         {
             LOG(ERROR, "Player %s withdraws maximum cards", curPlayer.getName().c_str());
             curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "ENOUGH_CARD"), socketID);
+            return;
+        }
+
+        if (!curJson.isMember("Pile") || curJson["Pile"].isNull())
+        {
+            LOG(ERROR, "No Pile");
             return;
         }
 
@@ -572,6 +600,13 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
     else if (messageType == "MERCHANT_DISCARD_CARDS")
     {
         /*  Handle situation card is invalid */
+
+        if (!curJson.isMember("Card") || curJson["Card"].isNull())
+        {
+            LOG(ERROR, "No Card");
+            return;
+        }
+
         std::string cardString = curJson["Card"].asString();
         CardName discardCard = INVALID_CARD;
         auto findCard = stringToCardName.find(cardString);
@@ -590,6 +625,12 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
         {
             LOG(ERROR, "Invalid Card from hand");
             curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "INVALID_DISCARD_CARD_IN_HAND"), socketID);
+            return;
+        }
+
+        if (!curJson.isMember("Pile") || curJson["Pile"].isNull())
+        {
+            LOG(ERROR, "No Pile");
             return;
         }
 
@@ -617,6 +658,23 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
     }
     else if (messageType == "MERCHANT_GIVE_BAG")
     {
+
+        if (!curJson.isMember("Fee") || curJson["Fee"].isNull())
+        {
+            LOG(ERROR, "No Fee");
+            return;
+        }
+        if (!curJson.isMember("Report") || curJson["Report"].isNull())
+        {
+            LOG(ERROR, "No Report");
+            return;
+        }
+        if (!curJson.isMember("Bag") || curJson["Bag"].isNull())
+        {
+            LOG(ERROR, "No Bag");
+            return;
+        }
+
         const std::string owner = curJson["PlayerName"].asString();
         const int bribe = curJson["Fee"].asInt();
         const CardName declared = stringToCardName.at(curJson["Report"].asString());
@@ -693,9 +751,20 @@ void SheriffTurnState::handleRequest(Game *curGame, const std::string &message, 
         return;
     }
 
+    if (!curJson.isMember("MessageType") || curJson["MessageType"].isNull())
+    {
+        LOG(ERROR, "No MessageType");
+        return;
+    }
+
     std::string messageType = curJson["MessageType"].asString();
     if (messageType == "PLAYER_RESPONSE")
     {
+        if (!curJson.isMember("ReasonType") || curJson["ReasonType"].isNull())
+        {
+            LOG(ERROR, "No ReasonType");
+            return;
+        }
         std::string reasonType = curJson["ReasonType"].asString();
         if (reasonType == "SHERIFF_CHECK_RESPONSE")
         {
