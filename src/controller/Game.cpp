@@ -452,6 +452,7 @@ bool Game::isSheriffTransfer()
     if (mPlayerOrder.empty())
     {
         mPlayerSheriffTimes--;
+        LOG(INFO, "mPlayerSheriffTimes %d", mPlayerSheriffTimes);
         int sheriffIndex = mSheriffIndex % mNumberOfPlayers;
         mSheriffIndex++;
 
