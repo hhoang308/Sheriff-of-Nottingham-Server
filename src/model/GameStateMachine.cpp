@@ -436,6 +436,12 @@ void MerchantTurnState::enterState(Game *curGame)
 {
     LOG(INFO, "MerchantTurnState::enterState()");
     mMerchantSocketID = curGame->getMerchantTurnSocketID();
+    if (mMerchantSocketID == -1)
+    {
+        LOG(ERROR, "Start next round");
+        curGame->setState(new RoundStartedState());
+        return;
+    }
     curGame->getPlayer(mMerchantSocketID).setState(PLAYER_TRADING);
     mMerchantState = MERCHANT_IDLE;
     if (mMerchantSocketID == -1)
@@ -684,6 +690,7 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
         {
             totalCard++;
             bagCards.push_back(stringToCardName.at(item.asString()));
+            curPlayer.removeCardFromHand(stringToCardName.at(item.asString()));
         }
         if (!curGame->setBag(bagCards, bribe, declared, owner))
         {
