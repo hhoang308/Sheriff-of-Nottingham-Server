@@ -499,7 +499,7 @@ Bag &Game::getBag()
     return mBag;
 }
 
-bool Game::setBag(std::vector<CardName> &bagCards, const int bribe, const CardName declared, const std::string owner)
+bool Game::setBag(std::vector<CardName> &bagCards, const std::string bribe, const CardName declared, const std::string owner)
 {
     mBag.mBagBribe = bribe;
     mBag.mBagDeclared = declared;
@@ -546,7 +546,7 @@ int Bag::calculatePenalty()
 bool Bag::clearBag()
 {
     mBagCards.clear();
-    mBagBribe = 0;
+    mBagBribe = "0";
     mBagOwner = "";
     mBagDeclared = INVALID_CARD;
     return true;
