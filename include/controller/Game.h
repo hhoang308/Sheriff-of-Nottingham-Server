@@ -28,7 +28,7 @@
 struct Bag
 {
     std::vector<CardName> mBagCards;
-    int mBagBribe;
+    std::string mBagBribe;
     CardName mBagDeclared;
     std::string mBagOwner;
 
@@ -100,7 +100,7 @@ public:
 
     Bag &getBag();
     bool clearBag();
-    bool setBag(std::vector<CardName> &bagCards, const int bribe, const CardName declared, const std::string owner);
+    bool setBag(std::vector<CardName> &bagCards, const std::string bribe, const CardName declared, const std::string owner);
 
     void sendMessageToClient(const std::string &message, const int socketId);
     void sendMessageToAll(const std::string &message);

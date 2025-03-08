@@ -682,7 +682,7 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
         }
 
         const std::string owner = curJson["PlayerName"].asString();
-        const int bribe = curJson["Fee"].asInt();
+        const std::string bribe = curJson["Fee"].asString();
         const CardName declared = stringToCardName.at(curJson["Report"].asString());
         int totalCard = 0;
         std::vector<CardName> bagCards;
