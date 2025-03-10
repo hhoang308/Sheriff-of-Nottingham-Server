@@ -814,7 +814,7 @@ void SheriffTurnState::handleRequest(Game *curGame, const std::string &message, 
     Bag curBag = curGame->getBag();
 
     Json::Value forwardMessage;
-    forwardMessage["PlayerName"] = curBag.mBagOwner;
+    forwardMessage["PlayerName"] = curPlayer.getName();
     // forwardMessage["Fee"] = curBag.mBagBribe;
     // forwardMessage["Report"] = cardNameToString.at(curBag.mBagDeclared);
     Json::Value bagCards(Json::arrayValue);
