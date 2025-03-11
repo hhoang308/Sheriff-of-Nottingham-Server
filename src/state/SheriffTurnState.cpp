@@ -10,14 +10,17 @@
  * @brief Construct a new Sheriff Turn State:: Sheriff Turn State object
  *
  */
+
 SheriffTurnState::SheriffTurnState()
 {
     LOG(INFO, "SheriffTurnState initialized");
 }
+
 SheriffTurnState::~SheriffTurnState()
 {
     LOG(INFO, "SheriffTurnState destructor called");
 }
+
 void SheriffTurnState::enterState(Game *curGame)
 {
     LOG(INFO, "SheriffTurnState::enterState()");
@@ -29,6 +32,7 @@ void SheriffTurnState::enterState(Game *curGame)
     message["PlayerName"] = sheriffPlayer.getName();
     curGame->sendMessageToAll(jsonToString(message));
 }
+
 void SheriffTurnState::handleRequest(Game *curGame, const std::string &message, const int socketID)
 {
     // LOG(INFO, "SheriffTurnState::handleRequest() socketID %d message '%s' ", socketID, message.c_str());
@@ -122,6 +126,7 @@ void SheriffTurnState::handleRequest(Game *curGame, const std::string &message, 
     // curPlayer.setState(PLAYER_RECEIVE_CARDS);
     curGame->sendMessageToAll(jsonToString(forwardMessage));
 }
+
 std::string SheriffTurnState::getStateName() const
 {
     return "SheriffTurnState";

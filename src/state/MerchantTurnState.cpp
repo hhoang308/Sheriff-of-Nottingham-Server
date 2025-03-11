@@ -16,10 +16,12 @@ MerchantTurnState::MerchantTurnState()
 {
     LOG(INFO, "MerchantTurnState initialized");
 }
+
 MerchantTurnState::~MerchantTurnState()
 {
     LOG(INFO, "MerchantTurnState destructor called");
 }
+
 void MerchantTurnState::enterState(Game *curGame)
 {
     LOG(INFO, "MerchantTurnState::enterState()");
@@ -43,6 +45,7 @@ void MerchantTurnState::enterState(Game *curGame)
     message["PlayerName"] = curGame->getPlayer(mMerchantSocketID).getName();
     curGame->sendMessageToAll(jsonToString(message));
 }
+
 void MerchantTurnState::handleRequest(Game *curGame, const std::string &message, const int socketID)
 {
     // LOG(INFO, "MerchantTurnState::handleRequest() socketID %d message '%s' ", socketID, message.c_str());
@@ -306,6 +309,7 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
         LOG(ERROR, "Invalid message type '%s'", messageType.c_str());
     }
 }
+
 std::string MerchantTurnState::getStateName() const
 {
     return "MerchantTurnState";
