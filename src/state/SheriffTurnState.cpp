@@ -114,16 +114,20 @@ void SheriffTurnState::handleRequest(Game *curGame, const std::string &message, 
     if (messageType == "SHERIFF_CHECK")
     {
         forwardMessage["MessageType"] = "SHERIFF_CHECK_RESPONSE";
+        curGame->calculatePenalty(mSheriffSocketID, curBag, false);
     }
     else if (messageType == "SHERIFF_PASS")
     {
         forwardMessage["MessageType"] = "SHERIFF_PASS_RESPONSE";
+        curGame->calculatePenalty(mSheriffSocketID, curBag, true);
     }
     else
     {
         LOG(ERROR, "Invalid message type '%s'", messageType.c_str());
+        return;
     }
     // curPlayer.setState(PLAYER_RECEIVE_CARDS);
+    (void) curBag.clearBag();
     curGame->sendMessageToAll(jsonToString(forwardMessage));
 }
 

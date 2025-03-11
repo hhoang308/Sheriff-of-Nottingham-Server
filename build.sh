@@ -41,6 +41,16 @@ if cmake --build "$BUILD_DIR"; then
             exit 1
         fi
     fi
+    # if [[ "$BUILD_TESTS" == "ON" ]]; then
+    #     EXECUTABLE="$BUILD_DIR/UnitTests"
+    #     if [[ -f "$EXECUTABLE" ]]; then
+    #         echo "Running Unit Test..."
+    #         cd "$BUILD_DIR" && ./UnitTests
+    #     else
+    #         echo "Error: Executable $EXECUTABLE not found!"
+    #         exit 1
+    #     fi
+    # fi
 else
     echo "Build failed!"
     exit 1

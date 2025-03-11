@@ -273,6 +273,7 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
         }
 
         const std::string owner = curJson["PlayerName"].asString();
+        const int ownerSocketID = mMerchantSocketID;
         const std::string bribe = curJson["Fee"].asString();
         const CardName declared = stringToCardName.at(curJson["Report"].asString());
         int totalCard = 0;
@@ -283,7 +284,7 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
             bagCards.push_back(stringToCardName.at(item.asString()));
             curPlayer.removeCardFromHand(stringToCardName.at(item.asString()));
         }
-        if (!curGame->setBag(bagCards, bribe, declared, owner))
+        if (!curGame->setBag(bagCards, bribe, declared, owner, ownerSocketID))
         {
             LOG(ERROR, "Invalid bag");
             curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "INVALID_BAG"), socketID);

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <Log.h>
 #include <memory>
+#include <string>
 
 /**
  * @brief Construct a new Game:: Game object
@@ -302,6 +303,7 @@ top chicken, top bread,...got bonus point, please consider this situation
  */
 std::vector<Player *> Game::findWinner()
 {
+    return {};
 }
 
 bool Game::dealsCardToPlayers()
@@ -499,12 +501,13 @@ Bag &Game::getBag()
     return mBag;
 }
 
-bool Game::setBag(std::vector<CardName> &bagCards, const std::string bribe, const CardName declared, const std::string owner)
+bool Game::setBag(std::vector<CardName> &bagCards, const std::string bribe, const CardName declared, const std::string owner, const int ownerSocketID)
 {
     mBag.mBagBribe = bribe;
     mBag.mBagDeclared = declared;
     mBag.mBagCards = bagCards;
     mBag.mBagOwner = owner;
+    mBag.mBagOwnerSocketID = ownerSocketID;
 #ifdef ENABLE_DEBUG
     std::string bagCardsString = "";
     for (const auto &card : bagCards)
@@ -514,7 +517,7 @@ bool Game::setBag(std::vector<CardName> &bagCards, const std::string bribe, cons
     bagCardsString.pop_back();
     bagCardsString.pop_back();
 
-    LOG(INFO, "Bag's info: mBagBribe %d, mBagDeclared %s, mBagCards [%s], mBagOwner %s", bribe, cardNameToString.at(declared).c_str(), bagCardsString.c_str(), owner.c_str());
+    LOG(INFO, "Bag's info: mBagBribe %d, mBagDeclared %s, mBagCards [%s], mBagOwner %s", stoi(bribe), cardNameToString.at(declared).c_str(), bagCardsString.c_str(), owner.c_str());
 #endif
     return true;
 }
@@ -525,22 +528,46 @@ bool Game::clearBag()
     return true;
 }
 
-/**
- * @brief This function will return 0 if the Merchant tells the truth, otherwise return the penalty
- *
- * @return int
- */
-int Bag::calculatePenalty()
+void Game::calculatePenalty(const int sheriffSocketID, Bag &bag, bool isPass)
 {
-    int penalty = 0;
-    for (const auto &pair : mBagCards)
+    if (bag.isEmpty())
     {
-        if (pair != mBagDeclared)
+        LOG(ERROR, "Invalid bag");
+        return;
+    }
+
+    int bagOwnerSocketID = bag.mBagOwnerSocketID;
+    Player &bagOwnerPlayer = getPlayer(bagOwnerSocketID);
+    Player &sheriffPlayer = getPlayer(sheriffSocketID);
+
+    if (isPass)
+    {
+        /* Sheriff receives money and passes this bag */
+        bagOwnerPlayer.subtractGold(stoi(bag.mBagBribe));
+        for (const auto &card : bag.mBagCards)
         {
-            penalty += cardPenalty.at(pair);
+            bagOwnerPlayer.addCardToGoods(card);
+        }
+        sheriffPlayer.addGold(stoi(bag.mBagBribe));
+    }
+    else
+    {
+        /* Sheriff wants to check the bag */
+        for (const auto &card : bag.mBagCards)
+        {
+            if (card != bag.mBagDeclared)
+            {
+                sheriffPlayer.addGold(cardPenalty.at(card));
+                bagOwnerPlayer.subtractGold(cardPenalty.at(card));
+            }
+            else
+            {
+                sheriffPlayer.subtractGold(cardPenalty.at(card));
+                bagOwnerPlayer.addGold(cardPenalty.at(card));
+                bagOwnerPlayer.addCardToGoods(card);
+            }
         }
     }
-    return penalty;
 }
 
 bool Bag::clearBag()
@@ -550,4 +577,9 @@ bool Bag::clearBag()
     mBagOwner = "";
     mBagDeclared = INVALID_CARD;
     return true;
+}
+
+bool Bag::isEmpty()
+{
+    return mBagCards.empty();
 }

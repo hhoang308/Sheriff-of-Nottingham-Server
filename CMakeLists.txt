@@ -44,6 +44,7 @@ if(BUILD_SERVER)
     )
     target_include_directories(SheriffOfNottinghamServer PRIVATE ${INCLUDE_DIRS})
     target_link_libraries(SheriffOfNottinghamServer PRIVATE ${LIBS})
+    target_compile_options(SheriffOfNottinghamServer PRIVATE -Wall -Wextra )
 
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         target_compile_definitions(SheriffOfNottinghamServer PRIVATE ENABLE_DEBUG)
@@ -66,6 +67,7 @@ if(BUILD_TESTS)
     target_link_libraries(UnitTests PRIVATE gtest gtest_main Threads::Threads ${LIBS})
 
     target_compile_options(UnitTests PRIVATE -Wall -Wextra -g)
+    target_compile_definitions(UnitTests PRIVATE ENABLE_DEBUG)
 
     include(GoogleTest)
     gtest_discover_tests(UnitTests TEST_PREFIX "SheriffOfNottingham.")

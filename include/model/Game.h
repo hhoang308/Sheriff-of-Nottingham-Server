@@ -31,9 +31,10 @@ struct Bag
     std::string mBagBribe;
     CardName mBagDeclared;
     std::string mBagOwner;
+    int mBagOwnerSocketID;
 
-    int calculatePenalty();
     bool clearBag();
+    bool isEmpty();
 };
 class Game
 {
@@ -100,7 +101,8 @@ public:
 
     Bag &getBag();
     bool clearBag();
-    bool setBag(std::vector<CardName> &bagCards, const std::string bribe, const CardName declared, const std::string owner);
+    bool setBag(std::vector<CardName> &bagCards, const std::string bribe, const CardName declared, const std::string owner, const int ownerSocketID);
+    void calculatePenalty(const int sheriffSocketID, Bag& bag, bool isPass);
 
     void sendMessageToClient(const std::string &message, const int socketId);
     void sendMessageToAll(const std::string &message);

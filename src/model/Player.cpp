@@ -63,18 +63,23 @@ bool Player::addGold(int amount)
 
 bool Player::subtractGold(int amount)
 {
-    int currentPlayerGold = mPlayerGold - amount;
-    if (currentPlayerGold >= 0)
-    {
-        mPlayerGold = currentPlayerGold;
-        mPlayerPoints -= amount;
-        return true;
-    }
-    else
-    {
-        printf("Can't subtract player %s %d gold, mPlayerGold is %d\n", mPlayerName.c_str(), amount, mPlayerGold);
-        return false;
-    }
+    // int currentPlayerGold = mPlayerGold - amount;
+    // if (currentPlayerGold >= 0)
+    // {
+    //     mPlayerGold = currentPlayerGold;
+    //     mPlayerPoints -= amount;
+    //     return true;
+    // }
+    // else
+    // {
+    //     printf("Can't subtract player %s %d gold, mPlayerGold is %d\n", mPlayerName.c_str(), amount, mPlayerGold);
+    //     return false;
+    // }
+
+    /* Enable negative gold */
+    mPlayerGold = mPlayerGold - amount;
+    mPlayerPoints -= amount;
+    return true;
 }
 
 bool Player::addCardToHand(const CardName card)
