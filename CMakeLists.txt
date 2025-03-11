@@ -9,19 +9,25 @@ option(BUILD_TESTS "Build unit tests" OFF)
 set(INCLUDE_DIRS
     include
     include/model
-    include/controller
+    include/state
     include/utils
     include/interface
+    include/state
     external
 )
 
 set(SERVER_SOURCES
     src/model/Server.cpp
-    src/controller/Game.cpp
+    src/model/Game.cpp
     src/model/Player.cpp
     src/model/Card.cpp
     src/utils/Utils.cpp
-    src/model/GameStateMachine.cpp
+    src/state/GameEndedState.cpp
+    src/state/GameStartedState.cpp
+    src/state/MerchantTurnState.cpp
+    src/state/RoundStartedState.cpp
+    src/state/SheriffTurnState.cpp
+    src/state/WaitingForPlayersState.cpp
     external/json/jsoncpp.cpp
 )
 

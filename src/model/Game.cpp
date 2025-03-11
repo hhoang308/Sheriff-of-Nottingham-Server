@@ -1,5 +1,5 @@
 #include "Game.h"
-#include "GameStateMachine.h"
+#include "WaitingForPlayersState.h"
 #include "Utils.h"
 #include <iostream>
 #include <Log.h>
