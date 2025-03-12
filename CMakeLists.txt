@@ -70,5 +70,5 @@ if(BUILD_TESTS)
     target_compile_definitions(UnitTests PRIVATE ENABLE_DEBUG)
 
     include(GoogleTest)
-    gtest_discover_tests(UnitTests TEST_PREFIX "SheriffOfNottingham.")
+    gtest_discover_tests(UnitTests TEST_PREFIX "SoN.")
 endif()
