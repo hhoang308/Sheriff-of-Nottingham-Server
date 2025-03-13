@@ -119,7 +119,7 @@ void Server::acceptClient()
         }
 
         /* Move create player to handleRequest() of Game, refer to https://github.com/hhoang308/Sheriff-of-Nottingham-Server/issues/8 */
-        LOG(INFO, "Have a new connection!");
+        LOG(INFO, "Have a new connection at client_socket %d!", client_socket);
 
         /* TODO: Change to thread pool to optimize resources */
         std::lock_guard<std::mutex> lock(mClientMutex);

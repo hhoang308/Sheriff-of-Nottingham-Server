@@ -3,7 +3,7 @@
 
 /* TODO: set player color in constructor, with color format */
 Player::Player(const int socketID, const int gameID, const std::string &playerName)
-    : mPlayerGold(50), mPlayerState(PLAYER_WAITING), mSocketID(socketID), mGameID(gameID), mPlayerName(playerName)
+    : mPlayerGold(50), mPlayerState(PLAYER_WAITING), mSocketID(socketID), mGameID(gameID), mPlayerName(playerName), mPlayerPoints(50)
 {
     LOG(INFO, "Player %s created with socketID %d, gameID %d", playerName.c_str(), socketID, gameID);
     mPlayerHand = std::vector<CardName>();
@@ -57,7 +57,6 @@ int Player::getGameID() const
 bool Player::addGold(int amount)
 {
     mPlayerGold += amount;
-    mPlayerPoints += amount;
     return true;
 }
 
@@ -78,7 +77,6 @@ bool Player::subtractGold(int amount)
 
     /* Enable negative gold */
     mPlayerGold = mPlayerGold - amount;
-    mPlayerPoints -= amount;
     return true;
 }
 
@@ -113,7 +111,6 @@ const std::vector<CardName> &Player::getHand() const
 bool Player::addCardToGoods(const CardName card)
 {
     mPlayerGoods[card]++;
-    mPlayerPoints += cardValue.at(card);
     return true;
 }
 
@@ -138,4 +135,9 @@ bool Player::setGold(int playerGold)
 int Player::getPlayerPoints()
 {
     return mPlayerPoints;
+}
+
+void Player::addPlayerPoints(int amount)
+{
+    mPlayerPoints += amount;
 }

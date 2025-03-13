@@ -56,13 +56,13 @@ public:
 
     bool addGold(int amount);
     bool subtractGold(int amount);
+
     int getPlayerPoints();
+    void addPlayerPoints(int amount);
 
     bool addCardToHand(const CardName card);
     bool removeCardFromHand(const CardName card);
     bool addCardToGoods(const CardName card);
-    /* TODO: consider change bag to a different class*/
-    bool addCardToBags(const CardName card);
 
     const std::unordered_map<CardName, int> &getGoods() const;
     const std::vector<CardName> &getHand() const;

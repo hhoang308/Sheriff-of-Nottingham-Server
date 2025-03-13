@@ -98,6 +98,7 @@ public:
     CardName withdrawPile(const int pile);
     bool insertPile(const CardName insertCard, const int pile);
     std::vector<Player *> findWinner();
+    void calculatePoints();
 
     Bag &getBag();
     bool clearBag();

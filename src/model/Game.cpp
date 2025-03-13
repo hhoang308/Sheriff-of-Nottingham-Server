@@ -5,6 +5,7 @@
 #include <Log.h>
 #include <memory>
 #include <string>
+#include <algorithm>
 
 /**
  * @brief Construct a new Game:: Game object
@@ -304,6 +305,130 @@ top chicken, top bread,...got bonus point, please consider this situation
 std::vector<Player *> Game::findWinner()
 {
     return {};
+}
+
+void Game::calculatePoints()
+{
+    std::vector<CardName> cardList = {APPLE, CHEESE, BREAD, CHICKEN, PEPPER, MEAD, SILK, CROSSBOW};
+    for(auto& card : cardList)
+    {
+        int kingCount = 0; /* Most card player have */
+        int queenCount = 0; /* Second most card player have */
+
+        int numberOfKing = 0; /* number of player have the most card */
+        int numberOfQueen = 0; /* number of player have the second most card */
+
+        for(auto &player : mPlayers)
+        {
+            for(auto& good : player.second->getGoods())
+            {
+                if(good.first == card)
+                {
+                    #ifdef ENABLE_DEBUG
+                    LOG(INFO, "Player %s have %d %s", player.second->getName().c_str(), good.second, cardNameToString.at(card).c_str());
+                    #endif
+                    player.second->addPlayerPoints(cardValue.at(card) * good.second);
+                    if(good.second > kingCount)
+                    {
+                        queenCount = kingCount;
+                        numberOfQueen = numberOfKing;
+                        kingCount = good.second;
+                        numberOfKing = 1;
+                    }
+                    else if (good.second == kingCount)
+                    {
+                        numberOfKing++;
+                    }
+                    else if(good.second > queenCount)
+                    {
+                        queenCount = good.second;
+                        numberOfQueen = 1;
+                    }
+                    else if(good.second == queenCount)
+                    {
+                        numberOfQueen++;
+                    }
+                }
+            }
+        }
+
+        #ifdef ENABLE_DEBUG
+        LOG(INFO, "King: %d, numberOfKing: %d, Queen: %d. numberOfQueen: %d", kingCount, numberOfKing, queenCount, numberOfQueen);
+        #endif
+
+        /* No one have this card */
+        if(kingCount == 0)
+        {
+            continue;
+        }
+
+        if(numberOfKing > 1) /* >= 2 King */
+        {
+            int sharedPrice = (bonusPointsChampion.at(card) + bonusPointRunnerUp.at(card)) / numberOfKing;
+            for(auto &player : mPlayers)
+            {
+                for(auto& good : player.second->getGoods())
+                {
+                    if(good.first == card && good.second == kingCount)
+                    {
+                        player.second->addPlayerPoints(sharedPrice);
+                        #ifdef ENABLE_DEBUG
+                        LOG(INFO, "2 King: Player %s have %d %s, got %d points", player.second->getName().c_str(), good.second, cardNameToString.at(card).c_str(), sharedPrice);
+                        #endif
+                    }
+                }
+            }
+        }
+        else /* 1 King */
+        {
+            for(auto &player : mPlayers)
+            {
+                for(auto& good : player.second->getGoods())
+                {
+                    if(good.first == card && good.second == kingCount)
+                    {
+                        player.second->addPlayerPoints(bonusPointsChampion.at(card));
+                        #ifdef ENABLE_DEBUG
+                        LOG(INFO, "1 King: Player %s have %d %s, got %d points", player.second->getName().c_str(), good.second, cardNameToString.at(card).c_str(), bonusPointsChampion.at(card));
+                        #endif
+                    }
+                }
+            }
+            if(queenCount > 1) /* >= 2 Queen */
+            {
+                int sharedPrice = bonusPointRunnerUp.at(card) / numberOfQueen;
+                for(auto &player : mPlayers)
+                {
+                    for(auto& good : player.second->getGoods())
+                    {
+                        if(good.first == card && good.second == queenCount)
+                        {
+                            player.second->addPlayerPoints(sharedPrice);
+                            #ifdef ENABLE_DEBUG
+                            LOG(INFO, "2 Queen: Player %s have %d %s, got %d points", player.second->getName().c_str(), good.second, cardNameToString.at(card).c_str(), sharedPrice);
+                            #endif
+                        }
+                    }
+                }
+            }
+            else /* 1 Queen */
+            {
+                for(auto &player : mPlayers)
+                {
+                    for(auto& good : player.second->getGoods())
+                    {
+                        if(good.first == card && good.second == queenCount)
+                        {
+                            player.second->addPlayerPoints(bonusPointRunnerUp.at(card));
+                            #ifdef ENABLE_DEBUG
+                            LOG(INFO, "1 Queen: Player %s have %d %s, got %d points", player.second->getName().c_str(), good.second, cardNameToString.at(card).c_str(), bonusPointRunnerUp.at(card));
+                            #endif
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 bool Game::dealsCardToPlayers()

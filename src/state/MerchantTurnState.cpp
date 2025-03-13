@@ -278,6 +278,7 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
         const CardName declared = stringToCardName.at(curJson["Report"].asString());
         int totalCard = 0;
         std::vector<CardName> bagCards;
+        /* TODO: Merchant can only trade upto 5 cards */
         for (const auto &item : curJson["Bag"])
         {
             totalCard++;
