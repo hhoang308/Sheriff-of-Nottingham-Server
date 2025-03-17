@@ -29,6 +29,7 @@ void GameEndedState::enterState(Game *curGame)
 {
     LOG(INFO, "GameEndedState::enterState()");
     /* TODO: Calculate who is the winner */
+    curGame->calculatePoints();
     Json::Value endGameMessage;
     endGameMessage["MessageType"] = "GAME_END";
     /* TODO: change state of all players and disconnect all of them */
