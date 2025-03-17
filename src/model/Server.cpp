@@ -189,32 +189,7 @@ void Server::handleClient(int clientSocket)
         /* TODO: Handle the situation when all players disconect */
         if (valRead == 0)
         {
-            if (curGame->getPlayerSize() == 1)
-            {
-                LOG(INFO, "All players disconnected, game is over!");
-                mGames.erase(mSocketIDToGame[clientSocket]);
-                break;
-            }
-            if (curGame->isPlayerExists(clientSocket))
-            {
-                Json::Value message;
-                message["MessageType"] = "GAME_DISCONNECT_PLAYER";
-                message["PlayerName"] = curGame->getPlayer(clientSocket).getName();
-                LOG(INFO, "Client disconnected!");
-                {
-                    std::lock_guard<std::mutex> lock(mClientMutex);
-                    /* TODO : Find player in all game -> erase their data */
-                    if (curGame)
-                    {
-                        LOG(INFO, "Removing playerSocketID %d from game", clientSocket);
-                        (void)curGame->removePlayer(clientSocket);
-                    }
-                    mSocketIDToGame.erase(clientSocket);
-                }
-                sendToAll(jsonToString(message));
-            }
-            shutdown(clientSocket, SHUT_RDWR);
-            close(clientSocket);
+            closeConnection(clientSocket);
             break;
         }
         buffer[valRead] = '\0'; /* null-terminate the buffer */
@@ -277,79 +252,31 @@ void Server::sendToAllExcept(const std::string &message, const int socketID)
 void Server::closeConnection(const int socketID)
 {
     LOG(INFO, "Closing connection for player %d", socketID);
-    shutdown(socketID, SHUT_RDWR);
-    close(socketID);
-    std::lock_guard<std::mutex> lock(mClientMutex);
     Game *curGame = nullptr;
+    if (mSocketIDToGame.find(socketID) != mSocketIDToGame.end())
     {
-        std::lock_guard<std::mutex> lock(mClientMutex);
-        if (mSocketIDToGame.find(socketID) != mSocketIDToGame.end())
-        {
-            curGame = mGames[mSocketIDToGame[socketID]].get();
-        }
+        curGame = mGames[mSocketIDToGame[socketID]].get();
     }
     if (curGame->getPlayerSize() == 1)
     {
         LOG(INFO, "All players disconnected, game is over!");
         mGames.erase(mSocketIDToGame[socketID]);
     }
+    /* TODO : Find player in all game -> erase their data */
+    if (curGame != nullptr)
     {
-        std::lock_guard<std::mutex> lock(mClientMutex);
-        /* TODO : Find player in all game -> erase their data */
-        if (curGame)
+        if (curGame->isPlayerExists(socketID))
         {
+            Json::Value message;
+            message["MessageType"] = "GAME_DISCONNECT_PLAYER";
+            message["PlayerName"] = curGame->getPlayer(socketID).getName();
+            /* TODO : Find player in all game -> erase their data */
             LOG(INFO, "Removing playerSocketID %d from game", socketID);
             (void)curGame->removePlayer(socketID);
+            mSocketIDToGame.erase(socketID);
+            sendToAll(jsonToString(message));
         }
     }
-    mSocketIDToGame.erase(socketID);
+    shutdown(socketID, SHUT_RDWR);
+    close(socketID);
 }
-
-// void Server::acceptClient() {
-//     socklen_t addrlen = sizeof(mServerAddress);
-//     while (true) {
-//         int clientSocket = accept(mServerSocket, (struct sockaddr*)&mServerAddress, &addrlen);
-//         if (clientSocket < 0) {
-//             perror("Accept failed");
-//             continue;
-//         }
-
-//         /* Player message */
-//         char buffer[BUFFER_SIZE];
-//         recv(clientSocket, buffer, BUFFER_SIZE, 0);
-//         std::string clientMessage(buffer);
-
-//         /* Parse JSON */
-//         std::string playerName = parsePlayerName(clientMessage); // Hàm parse JSON
-//         if (playerName.empty()) {
-//             std::cout << "Invalid connection attempt!" << std::endl;
-//             close(clientSocket);
-//             continue;
-//         }
-
-//         /* Player exists */
-//         std::lock_guard<std::mutex> lock(mClientMutex);
-//         if (playerData.find(playerName) == playerData.end()) {
-//             // Người chơi mới
-//             Player* newPlayer = new Player(playerName, MERCHANT);
-//             playerData[playerName] = newPlayer;
-//             socketToPlayer[clientSocket] = playerName;
-//             std::cout << "New player joined: " << playerName << std::endl;
-//         } else {
-//             // Người chơi cũ kết nối lại
-//             Player* existingPlayer = playerData[playerName];
-//             std::cout << "Player reconnected: " << playerName << std::endl;
-
-//             // Cập nhật socket ID
-//             int oldSocket = findSocketByPlayerName(playerName);
-//             if (oldSocket != -1) {
-//                 close(oldSocket); // Đóng kết nối cũ nếu cần
-//                 socketToPlayer.erase(oldSocket);
-//             }
-//             socketToPlayer[clientSocket] = playerName;
-//         }
-
-//         // Khởi chạy thread xử lý client
-//         mClientThreads.emplace_back(&Server::handleClient, this, clientSocket);
-//     }
-// }
