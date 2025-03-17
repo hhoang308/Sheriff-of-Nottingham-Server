@@ -120,17 +120,19 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
             LOG(ERROR, "No NumberOfCards");
             return;
         }
-        mNumberOfCards = curJson["NumberOfCards"].asInt();
+        mNumberOfCards = stoi(curJson["NumberOfCards"].asString());
         if (mNumberOfCards < 1 || mNumberOfCards > MAX_CARD_OF_PLAYER)
         {
             LOG(ERROR, "Invalid number of cards %d", mNumberOfCards);
             curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "INVALID_NUMBER_OF_CARDS"), socketID);
             return;
         }
+
         mMerchantState = MERCHANT_READY_TO_RECEIVE;
         Json::Value discardMessage;
         discardMessage["MessageType"] = "MERCHANT_DISCARD_REQUEST_RESPONSE";
         discardMessage["PlayerName"] = curPlayer.getName();
+        discardMessage["Cards"] = curJson["Cards"];
         curGame->sendMessageToClient(jsonToString(discardMessage), socketID);
     }
     else if (messageType == "MERCHANT_WITHDRAW_CARDS")
