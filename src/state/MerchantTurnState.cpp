@@ -122,7 +122,7 @@ void MerchantTurnState::handleRequest(Game *curGame, const Json::Value &jsonMess
         discardMessage["MessageType"] = "MERCHANT_DISCARD_REQUEST_RESPONSE";
         discardMessage["PlayerName"] = curPlayer.getName();
         discardMessage["Cards"] = jsonMessage["Cards"];
-        curGame->sendMessageToClient(jsonToString(discardMessage), socketID);
+        curGame->sendMessageToAll(jsonToString(discardMessage));
     }
     else if (messageType == "MERCHANT_WITHDRAW_CARDS")
     {
