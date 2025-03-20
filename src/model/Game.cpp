@@ -40,11 +40,11 @@ void Game::setState(GameState *newState)
     LOG(INFO, "currentState %s", currentState->getStateName().c_str());
 }
 
-void Game::handleRequest(const std::string &message, const int socketId)
+void Game::handleMessage(const std::string &message, const int socketId)
 {
     if (currentState)
     {
-        currentState->handleRequest(this, message, socketId);
+        currentState->receiveMessage(this, message, socketId);
     }
     else
     {

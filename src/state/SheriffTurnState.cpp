@@ -33,57 +33,41 @@ void SheriffTurnState::enterState(Game *curGame)
     curGame->sendMessageToAll(jsonToString(message));
 }
 
-void SheriffTurnState::handleRequest(Game *curGame, const std::string &message, const int socketID)
+void SheriffTurnState::handleResponse(Game *curGame, const Json::Value& jsonMessage, const int socketID)
 {
-    // LOG(INFO, "SheriffTurnState::handleRequest() socketID %d message '%s' ", socketID, message.c_str());
-    Json::Value curJson = stringToJson(message);
     Player &curPlayer = curGame->getPlayer(socketID);
 
-    if (curJson.empty())
+    std::string reasonType = jsonMessage["ReasonType"].asString();
+    if (reasonType == "SHERIFF_CHECK_RESPONSE" || reasonType == "SHERIFF_PASS_RESPONSE")
     {
-        LOG(ERROR, "Invalid JSON message '%s'", message.c_str());
-        return;
-    }
-
-    if (!curJson.isMember("MessageType") || curJson["MessageType"].isNull())
-    {
-        LOG(ERROR, "No MessageType");
-        return;
-    }
-
-    std::string messageType = curJson["MessageType"].asString();
-    if (messageType == "PLAYER_RESPONSE")
-    {
-        if (!curJson.isMember("ReasonType") || curJson["ReasonType"].isNull())
+        curPlayer.setState(PLAYER_RECEIVED_CHECK);
+        for (const auto &player : curGame->getAllPlayers())
         {
-            LOG(ERROR, "No ReasonType");
-            return;
-        }
-        std::string reasonType = curJson["ReasonType"].asString();
-        if (reasonType == "SHERIFF_CHECK_RESPONSE" || reasonType == "SHERIFF_PASS_RESPONSE")
-        {
-            curPlayer.setState(PLAYER_RECEIVED_CHECK);
-            for (const auto &player : curGame->getAllPlayers())
+            if (player.second->getState() != PLAYER_RECEIVED_CHECK)
             {
-                if (player.second->getState() != PLAYER_RECEIVED_CHECK)
-                {
-                    return;
-                }
+                return;
             }
-            curGame->setState(new MerchantTurnState());
-            return;
         }
-        else if (reasonType == "GAME_START_TURN" && socketID == mSheriffSocketID)
-        {
-            curPlayer.setState(PLAYER_INSPECTING);
-            return;
-        }
-        else
-        {
-            LOG(ERROR, "Not handle reasonType '%s'", reasonType.c_str());
-            return;
-        }
+        curGame->setState(new MerchantTurnState());
+        return;
     }
+    else if (reasonType == "GAME_START_TURN" && socketID == mSheriffSocketID)
+    {
+        curPlayer.setState(PLAYER_INSPECTING);
+        return;
+    }
+    else
+    {
+        LOG(ERROR, "Not handle reasonType '%s'", reasonType.c_str());
+        return;
+    }
+}
+
+void SheriffTurnState::handleRequest(Game *curGame, const Json::Value& jsonMessage, const int socketID)
+{
+    Player &curPlayer = curGame->getPlayer(socketID);
+
+    std::string messageType = jsonMessage["MessageType"].asString();
 
     if (socketID != mSheriffSocketID)
     {

@@ -61,26 +61,54 @@ void RoundStartedState::enterState(Game *curGame)
     }
 }
 
-void RoundStartedState::handleRequest(Game *curGame, const std::string &message, const int socketID)
+void RoundStartedState::handleResponse(Game *curGame, const Json::Value &jsonMessage, const int socketID)
 {
-    Json::Value curJson = stringToJson(message);
-
-    if (curJson.empty() || !curJson.isMember("MessageType") || curJson["MessageType"].isNull())
+    std::string reasonType = jsonMessage["ReasonType"].asString();
+    if (reasonType == "GAME_DEALS_ROLE")
     {
-        LOG(ERROR, "No MessageType ");
-        return;
+        Player &curPlayer = curGame->getPlayer(socketID);
+        curPlayer.setState(PLAYER_RECEIVE_ROLE);
+        for (auto &pair : curGame->getAllPlayers())
+        {
+            if (pair.second->getState() != PLAYER_RECEIVE_ROLE)
+            {
+                return;
+            }
+        }
+        curGame->dealsCardToPlayers();
     }
+    else if (reasonType == "GAME_DEALS_CARDS")
+    {
+        Player &curPlayer = curGame->getPlayer(socketID);
+        /* TODO: Handle the situation when a player diconnect */
+        curPlayer.setState(PLAYER_RECEIVE_CARDS);
+        for (auto &pair : curGame->getAllPlayers())
+        {
+            if (pair.second->getState() != PLAYER_RECEIVE_CARDS)
+            {
+                return;
+            }
+        }
+        curGame->setState(new MerchantTurnState());
+    }
+    else
+    {
+        LOG(ERROR, "Invalid reasonType '%s'", reasonType.c_str());
+    }
+}
 
-    std::string messageType = curJson["MessageType"].asString();
+void RoundStartedState::handleRequest(Game *curGame, const Json::Value &jsonMessage, const int socketID)
+{
+    std::string messageType = jsonMessage["MessageType"].asString();
     if (messageType == "PLAYER_RESPONSE")
     {
         LOG(INFO, "Player %s response", curGame->getPlayer(socketID).getName().c_str());
-        if (!curJson.isMember("ReasonType") || curJson["ReasonType"].isNull())
+        if (!jsonMessage.isMember("ReasonType") || jsonMessage["ReasonType"].isNull())
         {
             LOG(ERROR, "No ReasonType ");
             return;
         }
-        std::string reasonType = curJson["ReasonType"].asString();
+        std::string reasonType = jsonMessage["ReasonType"].asString();
         if (reasonType == "GAME_DEALS_ROLE")
         {
             Player &curPlayer = curGame->getPlayer(socketID);

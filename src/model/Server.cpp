@@ -204,7 +204,7 @@ void Server::handleClient(int clientSocket)
         {
             std::string str(buffer);
             // LOG(INFO, "Handling request");
-            curGame->handleRequest(str, clientSocket);
+            curGame->handleMessage(str, clientSocket);
         }
         else
         {

@@ -46,58 +46,47 @@ void MerchantTurnState::enterState(Game *curGame)
     curGame->sendMessageToAll(jsonToString(message));
 }
 
-void MerchantTurnState::handleRequest(Game *curGame, const std::string &message, const int socketID)
+void MerchantTurnState::handleResponse(Game *curGame, const Json::Value &jsonMessage, const int socketID)
 {
-    // LOG(INFO, "MerchantTurnState::handleRequest() socketID %d message '%s' ", socketID, message.c_str());
-    Json::Value curJson = stringToJson(message);
     Player &curPlayer = curGame->getPlayer(socketID);
 
-    if (curJson.empty() || !curJson.isMember("MessageType") || curJson["MessageType"].isNull())
+    std::string reasonType = jsonMessage["ReasonType"].asString();
+    if (reasonType == "GAME_START_TURN")
     {
-        LOG(ERROR, "Invalid JSON message '%s'", message.c_str());
+        LOG(INFO, "Player %s is trading", curGame->getPlayer(mMerchantSocketID).getName().c_str());
         return;
     }
-
-    std::string messageType = curJson["MessageType"].asString();
-    if (messageType == "PLAYER_RESPONSE")
+    else if (reasonType == "MERCHANT_WITHDRAW_CARDS_RESPONSE" && socketID == mMerchantSocketID)
     {
-        if (!curJson.isMember("ReasonType") || curJson["ReasonType"].isNull())
-        {
-            LOG(ERROR, "No ReasonType");
-            return;
-        }
-        std::string reasonType = curJson["ReasonType"].asString();
-        if (reasonType == "GAME_START_TURN")
-        {
-            LOG(INFO, "Player %s is trading", curGame->getPlayer(mMerchantSocketID).getName().c_str());
-            return;
-        }
-        else if (reasonType == "MERCHANT_WITHDRAW_CARDS_RESPONSE" && socketID == mMerchantSocketID)
-        {
-            LOG(INFO, "Merchant render done");
-            mMerchantState = MERCHANT_READY_TO_RECEIVE;
-            return;
-        }
-        else if (reasonType == "MERCHANT_GIVE_BAG" || reasonType == "MERCHANT_GIVE_BAG_RESPONSE")
-        {
-            LOG(INFO, "Merchant give bag done");
-            curPlayer.setState(PLAYER_RECEIVE_BAG);
-            for (const auto &player : curGame->getAllPlayers())
-            {
-                if (player.second->getState() != PLAYER_RECEIVE_BAG)
-                {
-                    return;
-                }
-            }
-            curGame->setState(new SheriffTurnState());
-            return;
-        }
-        else
-        {
-            LOG(ERROR, "Not handle reasonType '%s'", reasonType.c_str());
-            return;
-        }
+        LOG(INFO, "Merchant render done");
+        mMerchantState = MERCHANT_READY_TO_RECEIVE;
+        return;
     }
+    else if (reasonType == "MERCHANT_GIVE_BAG" || reasonType == "MERCHANT_GIVE_BAG_RESPONSE")
+    {
+        LOG(INFO, "Merchant give bag done");
+        curPlayer.setState(PLAYER_RECEIVE_BAG);
+        for (const auto &player : curGame->getAllPlayers())
+        {
+            if (player.second->getState() != PLAYER_RECEIVE_BAG)
+            {
+                return;
+            }
+        }
+        curGame->setState(new SheriffTurnState());
+        return;
+    }
+    else
+    {
+        LOG(ERROR, "Not handle reasonType '%s'", reasonType.c_str());
+        return;
+    }
+}
+
+void MerchantTurnState::handleRequest(Game *curGame, const Json::Value &jsonMessage, const int socketID)
+{
+    Player &curPlayer = curGame->getPlayer(socketID);
+    std::string messageType = jsonMessage["MessageType"].asString();
 
     if (socketID != mMerchantSocketID)
     {
@@ -115,12 +104,12 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
 
     if (messageType == "MERCHANT_DISCARD_REQUEST")
     {
-        if (!curJson.isMember("NumberOfCards") || curJson["NumberOfCards"].isNull())
+        if (!jsonMessage.isMember("NumberOfCards") || jsonMessage["NumberOfCards"].isNull())
         {
             LOG(ERROR, "No NumberOfCards");
             return;
         }
-        mNumberOfCards = stoi(curJson["NumberOfCards"].asString());
+        mNumberOfCards = stoi(jsonMessage["NumberOfCards"].asString());
         if (mNumberOfCards < 1 || mNumberOfCards > MAX_CARD_OF_PLAYER)
         {
             LOG(ERROR, "Invalid number of cards %d", mNumberOfCards);
@@ -132,7 +121,7 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
         Json::Value discardMessage;
         discardMessage["MessageType"] = "MERCHANT_DISCARD_REQUEST_RESPONSE";
         discardMessage["PlayerName"] = curPlayer.getName();
-        discardMessage["Cards"] = curJson["Cards"];
+        discardMessage["Cards"] = jsonMessage["Cards"];
         curGame->sendMessageToClient(jsonToString(discardMessage), socketID);
     }
     else if (messageType == "MERCHANT_WITHDRAW_CARDS")
@@ -152,13 +141,13 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
             return;
         }
 
-        if (!curJson.isMember("Pile") || curJson["Pile"].isNull())
+        if (!jsonMessage.isMember("Pile") || jsonMessage["Pile"].isNull())
         {
             LOG(ERROR, "No Pile");
             return;
         }
 
-        std::string pile = curJson["Pile"].asString();
+        std::string pile = jsonMessage["Pile"].asString();
         Json::Value withdrawResponse;
         withdrawResponse["MessageType"] = "MERCHANT_WITHDRAW_CARDS_RESPONSE";
         withdrawResponse["PlayerName"] = curPlayer.getName();
@@ -200,13 +189,13 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
     {
         /*  Handle situation card is invalid */
 
-        if (!curJson.isMember("Card") || curJson["Card"].isNull())
+        if (!jsonMessage.isMember("Card") || jsonMessage["Card"].isNull())
         {
             LOG(ERROR, "No Card");
             return;
         }
 
-        std::string cardString = curJson["Card"].asString();
+        std::string cardString = jsonMessage["Card"].asString();
         CardName discardCard = INVALID_CARD;
         auto findCard = stringToCardName.find(cardString);
         if (findCard == stringToCardName.end())
@@ -227,13 +216,13 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
             return;
         }
 
-        if (!curJson.isMember("Pile") || curJson["Pile"].isNull())
+        if (!jsonMessage.isMember("Pile") || jsonMessage["Pile"].isNull())
         {
             LOG(ERROR, "No Pile");
             return;
         }
 
-        std::string pile = curJson["Pile"].asString();
+        std::string pile = jsonMessage["Pile"].asString();
         if (pile == "LEFT_DISCARD_PILE")
         {
             curGame->insertPile(discardCard, LEFT_PILE);
@@ -258,30 +247,30 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
     else if (messageType == "MERCHANT_GIVE_BAG")
     {
 
-        if (!curJson.isMember("Fee") || curJson["Fee"].isNull())
+        if (!jsonMessage.isMember("Fee") || jsonMessage["Fee"].isNull())
         {
             LOG(ERROR, "No Fee");
             return;
         }
-        if (!curJson.isMember("Report") || curJson["Report"].isNull())
+        if (!jsonMessage.isMember("Report") || jsonMessage["Report"].isNull())
         {
             LOG(ERROR, "No Report");
             return;
         }
-        if (!curJson.isMember("Bag") || curJson["Bag"].isNull())
+        if (!jsonMessage.isMember("Bag") || jsonMessage["Bag"].isNull())
         {
             LOG(ERROR, "No Bag");
             return;
         }
 
-        const std::string owner = curJson["PlayerName"].asString();
+        const std::string owner = jsonMessage["PlayerName"].asString();
         const int ownerSocketID = mMerchantSocketID;
-        const std::string bribe = curJson["Fee"].asString();
-        const CardName declared = stringToCardName.at(curJson["Report"].asString());
+        const std::string bribe = jsonMessage["Fee"].asString();
+        const CardName declared = stringToCardName.at(jsonMessage["Report"].asString());
         int totalCard = 0;
         std::vector<CardName> bagCards;
         /* TODO: Merchant can only trade upto 5 cards */
-        for (const auto &item : curJson["Bag"])
+        for (const auto &item : jsonMessage["Bag"])
         {
             totalCard++;
             bagCards.push_back(stringToCardName.at(item.asString()));
@@ -299,7 +288,7 @@ void MerchantTurnState::handleRequest(Game *curGame, const std::string &message,
         bagResponseAll["MessageType"] = "MERCHANT_GIVE_BAG";
         bagResponseAll["PlayerName"] = curPlayer.getName();
         bagResponseAll["Amount"] = std::to_string(totalCard);
-        bagResponseAll["Report"] = curJson["Report"].asString();
+        bagResponseAll["Report"] = jsonMessage["Report"].asString();
         bagResponseAll["Fee"] = bribe;
         curGame->sendMessageToAllExclude(jsonToString(bagResponseAll), socketID);
 

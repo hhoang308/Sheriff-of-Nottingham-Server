@@ -20,9 +20,14 @@ GameEndedState::~GameEndedState()
     LOG(INFO, "GameEndedState destructor called");
 }
 
-void GameEndedState::handleRequest(Game *curGame, const std::string &message, const int socketID)
+void GameEndedState::handleResponse(Game *curGame, const Json::Value &jsonMessage, const int socketID)
 {
-    LOG(INFO, "GameEndedState::handleRequest() socketID %d message '%s' ", socketID, message.c_str());
+    LOG(INFO, "Invalid message");
+}
+
+void GameEndedState::handleRequest(Game *curGame, const Json::Value &jsonMessage, const int socketID)
+{
+    LOG(INFO, "Invalid message");
 }
 
 void GameEndedState::enterState(Game *curGame)

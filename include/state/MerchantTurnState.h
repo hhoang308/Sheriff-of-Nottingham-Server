@@ -19,7 +19,8 @@ private:
 public:
     MerchantTurnState();
     ~MerchantTurnState();
-    void handleRequest(Game *curGame, const std::string &message, const int socketID) override;
+    void handleResponse(Game *curGame, const Json::Value& jsonMessage, const int socketID) override;
+    void handleRequest(Game *curGame, const Json::Value& jsonMessage, const int socketID) override;
     void enterState(Game *curGame) override;
     std::string getStateName() const override;
 };

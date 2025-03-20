@@ -21,21 +21,61 @@ WaitingForPlayersState::~WaitingForPlayersState()
     LOG(INFO, "WaitingForPlayersState destructor called");
 }
 
-void WaitingForPlayersState::handleRequest(Game *curGame, const std::string &message, const int socketID)
+void WaitingForPlayersState::handleResponse(Game *curGame, const Json::Value &jsonMessage, const int socketID)
 {
-    // LOG(INFO, "WaitingForPlayersState socketID %d message '%s' ", socketID, message.c_str());
-    /* TODO: Handle error when parse string failed */
-    Json::Value curJson = stringToJson(message);
-    if (curJson.empty())
+    std::string reasonType = jsonMessage["ReasonType"].asString();
+    if (reasonType == "GAME_ACCEPT_PLAYER")
     {
-        LOG(ERROR, "Invalid JSON message '%s'", message.c_str());
-        return;
+        std::string playerName = mPlayerNameTemp[socketID];
+
+        LOG(INFO, "Player %s response", playerName.c_str());
+
+        if (curGame->getPlayerSize() >= 1)
+        {
+            Json::Value connectedRecentlyMessage;
+            connectedRecentlyMessage["MessageType"] = "GAME_CONNECTED_PLAYER_RECENT";
+            Json::Value playersName(Json::arrayValue);
+            for (const auto &pair : curGame->getAllPlayers())
+            {
+                playersName.append(pair.second->getName());
+            }
+            connectedRecentlyMessage["PlayersName"] = playersName;
+
+            curGame->sendMessageToClient(jsonToString(connectedRecentlyMessage), socketID);
+
+            Json::Value notifyMessage;
+            notifyMessage["MessageType"] = "GAME_CONNECTED_PLAYER_NOW";
+            notifyMessage["PlayerName"] = playerName;
+            curGame->sendMessageToAllExclude(jsonToString(notifyMessage), socketID);
+        }
+
+        curGame->addPlayer(socketID, GAME_ID_DEFAULT, playerName);
     }
-    std::string messageType = curJson["MessageType"].asString();
+    else if (reasonType == "GAME_CONNECTED_PLAYER_RECENT")
+    {
+        for (auto &pair : curGame->getAllPlayers())
+        {
+            if (pair.second->getState() == PLAYER_READY)
+            {
+                Json::Value message;
+                message["MessageType"] = "GAME_ACCEPT_READY";
+                message["PlayerName"] = pair.second->getName();
+                curGame->sendMessageToClient(jsonToString(message), socketID);
+            }
+        }
+    }
+    else
+    {
+        LOG(ERROR, "Invalid reasonType '%s'", reasonType.c_str());
+    }
+}
+
+void WaitingForPlayersState::handleRequest(Game *curGame, const Json::Value &jsonMessage, const int socketID)
+{
+    std::string messageType = jsonMessage["MessageType"].asString();
     if (messageType == "PLAYER_JOIN")
     {
-
-        std::string playerName = curJson["PlayerName"].asString();
+        std::string playerName = jsonMessage["PlayerName"].asString();
         if (curGame->isPlayerNameTaken(playerName))
         {
             LOG(ERROR, "Player name '%s' is already taken", playerName.c_str());
@@ -65,7 +105,7 @@ void WaitingForPlayersState::handleRequest(Game *curGame, const std::string &mes
     }
     else if (messageType == "PLAYER_READY")
     {
-        std::string playerName = curJson["PlayerName"].asString();
+        std::string playerName = jsonMessage["PlayerName"].asString();
         LOG(INFO, "Player %s is ready", playerName.c_str());
         Json::Value message;
         message["MessageType"] = "GAME_ACCEPT_READY";
@@ -81,57 +121,13 @@ void WaitingForPlayersState::handleRequest(Game *curGame, const std::string &mes
     }
     else if (messageType == "PLAYER_UNREADY")
     {
-        std::string playerName = curJson["PlayerName"].asString();
+        std::string playerName = jsonMessage["PlayerName"].asString();
         LOG(INFO, "Player %s is ready", playerName.c_str());
         Json::Value message;
         message["MessageType"] = "GAME_ACCEPT_UNREADY";
         message["PlayerName"] = playerName;
         (void)curGame->getPlayer(socketID).setState(PLAYER_UNREADY);
         curGame->sendMessageToAll(jsonToString(message));
-    }
-    else if (messageType == "PLAYER_RESPONSE")
-    {
-        std::string reasonType = curJson["ReasonType"].asString();
-        if (reasonType == "GAME_ACCEPT_PLAYER")
-        {
-            std::string playerName = mPlayerNameTemp[socketID];
-
-            LOG(INFO, "Player %s response", playerName.c_str());
-
-            if (curGame->getPlayerSize() >= 1)
-            {
-                Json::Value connectedRecentlyMessage;
-                connectedRecentlyMessage["MessageType"] = "GAME_CONNECTED_PLAYER_RECENT";
-                Json::Value playersName(Json::arrayValue);
-                for (const auto &pair : curGame->getAllPlayers())
-                {
-                    playersName.append(pair.second->getName());
-                }
-                connectedRecentlyMessage["PlayersName"] = playersName;
-
-                curGame->sendMessageToClient(jsonToString(connectedRecentlyMessage), socketID);
-
-                Json::Value notifyMessage;
-                notifyMessage["MessageType"] = "GAME_CONNECTED_PLAYER_NOW";
-                notifyMessage["PlayerName"] = playerName;
-                curGame->sendMessageToAllExclude(jsonToString(notifyMessage), socketID);
-            }
-
-            curGame->addPlayer(socketID, GAME_ID_DEFAULT, playerName);
-        }
-        else if (reasonType == "GAME_CONNECTED_PLAYER_RECENT")
-        {
-            for (auto &pair : curGame->getAllPlayers())
-            {
-                if (pair.second->getState() == PLAYER_READY)
-                {
-                    Json::Value message;
-                    message["MessageType"] = "GAME_ACCEPT_READY";
-                    message["PlayerName"] = pair.second->getName();
-                    curGame->sendMessageToClient(jsonToString(message), socketID);
-                }
-            }
-        }
     }
     else
     {

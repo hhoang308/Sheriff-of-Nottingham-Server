@@ -59,12 +59,14 @@ private:
     std::queue<Player *> mPlayerOrder;
     Bag mBag;
 
+    std::unordered_map<CardName, int> mBlackMarketBonus;
+
 public:
     Game(const int gameId);
     ~Game();
 
     void setState(GameState *newState);
-    void handleRequest(const std::string &message, const int socketId);
+    void handleMessage(const std::string &message, const int socketId);
     std::string getCurrentState();
 
     bool addPlayer(const int socketID, const int gameID, const std::string &playerName);
@@ -103,7 +105,7 @@ public:
     Bag &getBag();
     bool clearBag();
     bool setBag(std::vector<CardName> &bagCards, const std::string bribe, const CardName declared, const std::string owner, const int ownerSocketID);
-    void calculatePenalty(const int sheriffSocketID, Bag& bag, bool isPass);
+    void calculatePenalty(const int sheriffSocketID, Bag &bag, bool isPass);
 
     void sendMessageToClient(const std::string &message, const int socketId);
     void sendMessageToAll(const std::string &message);
