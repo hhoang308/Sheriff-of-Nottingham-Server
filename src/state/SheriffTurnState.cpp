@@ -33,27 +33,37 @@ void SheriffTurnState::enterState(Game *curGame)
     curGame->sendMessageToAll(jsonToString(message));
 }
 
-void SheriffTurnState::handleResponse(Game *curGame, const Json::Value& jsonMessage, const int socketID)
+void SheriffTurnState::handleResponse(Game *curGame, const Json::Value &jsonMessage, const int socketID)
 {
     Player &curPlayer = curGame->getPlayer(socketID);
 
     std::string reasonType = jsonMessage["ReasonType"].asString();
     if (reasonType == "SHERIFF_CHECK_RESPONSE" || reasonType == "SHERIFF_PASS_RESPONSE")
     {
-        curPlayer.setState(PLAYER_RECEIVED_CHECK);
-        for (const auto &player : curGame->getAllPlayers())
-        {
-            if (player.second->getState() != PLAYER_RECEIVED_CHECK)
-            {
-                return;
-            }
-        }
-        curGame->setState(new MerchantTurnState());
+        Player &merchantPlayer = curGame->getPlayer(curGame->getMerchantSocketID());
+        curGame->sendMessageToAll(jsonToString(merchantPlayer.getPlayerInfo()));
+
         return;
     }
     else if (reasonType == "GAME_START_TURN" && socketID == mSheriffSocketID)
     {
         curPlayer.setState(PLAYER_INSPECTING);
+        return;
+    }
+    else if (reasonType == "PLAYER_UPDATE_INFO")
+    {
+        Player &sheriffPlayer = curGame->getPlayer(curGame->getSheriffSocketID());
+        curGame->sendMessageToAll(jsonToString(sheriffPlayer.getPlayerInfo()));
+
+        curPlayer.setState(PLAYER_RECEIVED_INFO);
+        for (const auto &player : curGame->getAllPlayers())
+        {
+            if (player.second->getState() != PLAYER_RECEIVED_INFO)
+            {
+                return;
+            }
+        }
+        curGame->setState(new MerchantTurnState());
         return;
     }
     else
@@ -63,7 +73,7 @@ void SheriffTurnState::handleResponse(Game *curGame, const Json::Value& jsonMess
     }
 }
 
-void SheriffTurnState::handleRequest(Game *curGame, const Json::Value& jsonMessage, const int socketID)
+void SheriffTurnState::handleRequest(Game *curGame, const Json::Value &jsonMessage, const int socketID)
 {
     Player &curPlayer = curGame->getPlayer(socketID);
 
@@ -111,7 +121,8 @@ void SheriffTurnState::handleRequest(Game *curGame, const Json::Value& jsonMessa
         return;
     }
     // curPlayer.setState(PLAYER_RECEIVE_CARDS);
-    (void) curBag.clearBag();
+    (void)curBag.clearBag();
+    (void)curGame->tradeContrabandToCards(curGame->getMerchantSocketID()); /* This function will execute if isBlackMarketCard rule is applied */
     curGame->sendMessageToAll(jsonToString(forwardMessage));
 }
 

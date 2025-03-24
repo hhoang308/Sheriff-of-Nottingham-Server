@@ -44,11 +44,14 @@ private:
     std::mutex mPlayerMutex;
     std::mutex mMerchantMutex;
     std::mutex mDeckMutex;
+    std::mutex mBlackMarketCardsMutex;
 
     int mNumberOfPlayers;
     int mPlayerSheriffTimes;
     int mSheriffSocketID;
+    int mMerchantSocketID;
     int mSheriffIndex;
+    bool isBlackMarketCardsApplied;
 
     std::list<std::pair<int, std::unique_ptr<Player>>> mPlayers; /* socketID -> player object */
     std::queue<int> mMerchantOrder;                              /* Merchant's socketID */
@@ -56,6 +59,7 @@ private:
     std::vector<CardName> mLeftPile;
     std::vector<CardName> mRightPile;
     std::vector<CardName> mDeck;
+    std::unordered_map<CardName, int> mBlackMarketCards;
     std::queue<Player *> mPlayerOrder;
     Bag mBag;
 
@@ -92,9 +96,12 @@ public:
     bool isSheriffTransfer();
 
     int getSheriffSocketID();
+    int getMerchantSocketID();
 
     std::vector<CardName> &getDeck();
     std::vector<CardName> &getPile(const int pile);
+    bool tradeContrabandToCards(const int socketID);
+    int getBlackMarketCards(const CardName card);
 
     CardName withdrawDeck();
     CardName withdrawPile(const int pile);

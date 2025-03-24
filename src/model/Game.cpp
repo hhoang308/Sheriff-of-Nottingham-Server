@@ -12,7 +12,7 @@
  *
  * @param gameId
  */
-Game::Game(const int gameId) : mGameId(gameId)
+Game::Game(const int gameId) : mGameId(gameId), isBlackMarketCardsApplied(true)
 {
     currentState = new WaitingForPlayersState();
     printf("Game created! Game ID %d, currentState %s\n", gameId, currentState->getStateName().c_str());
@@ -128,7 +128,7 @@ bool Game::addMerchantOrder(const int socketID)
 }
 
 /**
- * @brief create mNumberOfPlayer, mTotalRounds, mCurrentRound, mDeck, mLeftPile, mRightPile
+ * @brief create mNumberOfPlayer, mTotalRounds, mCurrentRound, mDeck, mLeftPile, mRightPile, mBlackMarketCards
  *
  * @return true
  * @return false
@@ -197,6 +197,13 @@ bool Game::createGameDetails()
     for (int i = 0; i < crossbowCount; ++i)
     {
         mDeck.emplace_back(CardName::CROSSBOW);
+    }
+
+    if (isBlackMarketCardsApplied)
+    {
+        mBlackMarketCards[CardName::PEPPER] = 2;
+        mBlackMarketCards[CardName::MEAD] = 2;
+        mBlackMarketCards[CardName::SILK] = 2;
     }
 
     // Shuffle the deck
@@ -309,26 +316,27 @@ std::vector<Player *> Game::findWinner()
 
 void Game::calculatePoints()
 {
+    /* Calculate points from Legal Cards */
     std::vector<CardName> cardList = {APPLE, CHEESE, BREAD, CHICKEN, PEPPER, MEAD, SILK, CROSSBOW};
-    for(auto& card : cardList)
+    for (auto &card : cardList)
     {
-        int kingCount = 0; /* Most card player have */
+        int kingCount = 0;  /* Most card player have */
         int queenCount = 0; /* Second most card player have */
 
-        int numberOfKing = 0; /* number of player have the most card */
+        int numberOfKing = 0;  /* number of player have the most card */
         int numberOfQueen = 0; /* number of player have the second most card */
 
-        for(auto &player : mPlayers)
+        for (auto &player : mPlayers)
         {
-            for(auto& good : player.second->getGoods())
+            for (auto &good : player.second->getGoods())
             {
-                if(good.first == card)
+                if (good.first == card)
                 {
-                    #ifdef ENABLE_DEBUG
+#ifdef ENABLE_DEBUG
                     LOG(INFO, "Player %s have %d %s", player.second->getName().c_str(), good.second, cardNameToString.at(card).c_str());
-                    #endif
+#endif
                     player.second->addPlayerPoints(cardValue.at(card) * good.second);
-                    if(good.second > kingCount)
+                    if (good.second > kingCount)
                     {
                         queenCount = kingCount;
                         numberOfQueen = numberOfKing;
@@ -339,12 +347,12 @@ void Game::calculatePoints()
                     {
                         numberOfKing++;
                     }
-                    else if(good.second > queenCount)
+                    else if (good.second > queenCount)
                     {
                         queenCount = good.second;
                         numberOfQueen = 1;
                     }
-                    else if(good.second == queenCount)
+                    else if (good.second == queenCount)
                     {
                         numberOfQueen++;
                     }
@@ -352,79 +360,107 @@ void Game::calculatePoints()
             }
         }
 
-        #ifdef ENABLE_DEBUG
+#ifdef ENABLE_DEBUG
         LOG(INFO, "King: %d, numberOfKing: %d, Queen: %d. numberOfQueen: %d", kingCount, numberOfKing, queenCount, numberOfQueen);
-        #endif
+#endif
 
         /* No one have this card */
-        if(kingCount == 0)
+        if (kingCount == 0)
         {
             continue;
         }
 
-        if(numberOfKing > 1) /* >= 2 King */
+        if (numberOfKing > 1) /* >= 2 King */
         {
             int sharedPrice = (bonusPointsChampion.at(card) + bonusPointRunnerUp.at(card)) / numberOfKing;
-            for(auto &player : mPlayers)
+            for (auto &player : mPlayers)
             {
-                for(auto& good : player.second->getGoods())
+                for (auto &good : player.second->getGoods())
                 {
-                    if(good.first == card && good.second == kingCount)
+                    if (good.first == card && good.second == kingCount)
                     {
                         player.second->addPlayerPoints(sharedPrice);
-                        #ifdef ENABLE_DEBUG
+#ifdef ENABLE_DEBUG
                         LOG(INFO, "2 King: Player %s have %d %s, got %d points", player.second->getName().c_str(), good.second, cardNameToString.at(card).c_str(), sharedPrice);
-                        #endif
+#endif
                     }
                 }
             }
         }
         else /* 1 King */
         {
-            for(auto &player : mPlayers)
+            for (auto &player : mPlayers)
             {
-                for(auto& good : player.second->getGoods())
+                for (auto &good : player.second->getGoods())
                 {
-                    if(good.first == card && good.second == kingCount)
+                    if (good.first == card && good.second == kingCount)
                     {
                         player.second->addPlayerPoints(bonusPointsChampion.at(card));
-                        #ifdef ENABLE_DEBUG
+#ifdef ENABLE_DEBUG
                         LOG(INFO, "1 King: Player %s have %d %s, got %d points", player.second->getName().c_str(), good.second, cardNameToString.at(card).c_str(), bonusPointsChampion.at(card));
-                        #endif
+#endif
                     }
                 }
             }
-            if(queenCount > 1) /* >= 2 Queen */
+            if (queenCount > 1) /* >= 2 Queen */
             {
                 int sharedPrice = bonusPointRunnerUp.at(card) / numberOfQueen;
-                for(auto &player : mPlayers)
+                for (auto &player : mPlayers)
                 {
-                    for(auto& good : player.second->getGoods())
+                    for (auto &good : player.second->getGoods())
                     {
-                        if(good.first == card && good.second == queenCount)
+                        if (good.first == card && good.second == queenCount)
                         {
                             player.second->addPlayerPoints(sharedPrice);
-                            #ifdef ENABLE_DEBUG
+#ifdef ENABLE_DEBUG
                             LOG(INFO, "2 Queen: Player %s have %d %s, got %d points", player.second->getName().c_str(), good.second, cardNameToString.at(card).c_str(), sharedPrice);
-                            #endif
+#endif
                         }
                     }
                 }
             }
             else /* 1 Queen */
             {
-                for(auto &player : mPlayers)
+                for (auto &player : mPlayers)
                 {
-                    for(auto& good : player.second->getGoods())
+                    for (auto &good : player.second->getGoods())
                     {
-                        if(good.first == card && good.second == queenCount)
+                        if (good.first == card && good.second == queenCount)
                         {
                             player.second->addPlayerPoints(bonusPointRunnerUp.at(card));
-                            #ifdef ENABLE_DEBUG
+#ifdef ENABLE_DEBUG
                             LOG(INFO, "1 Queen: Player %s have %d %s, got %d points", player.second->getName().c_str(), good.second, cardNameToString.at(card).c_str(), bonusPointRunnerUp.at(card));
-                            #endif
+#endif
                         }
                     }
+                }
+            }
+        }
+    }
+
+    /* Calculate points from Black Market Card */
+    if (isBlackMarketCardsApplied)
+    {
+        for (auto &player : mPlayers)
+        {
+            for (auto &blackMarketCard : player.second->getBlackMarketCard())
+            {
+                if (blackMarketCard.second == BLACK_MARKET_CARD_BOT)
+                {
+                    player.second->addPlayerPoints(bonusBlackMarketCardBot.at(blackMarketCard.first));
+                }
+                else if (blackMarketCard.second == BLACK_MARKET_CARD_TOP)
+                {
+                    player.second->addPlayerPoints(bonusBlackMarketCardTop.at(blackMarketCard.first));
+                }
+                else if (blackMarketCard.second == BLACK_MARKET_CARD_BOTH)
+                {
+                    player.second->addPlayerPoints(bonusBlackMarketCardBot.at(blackMarketCard.first));
+                    player.second->addPlayerPoints(bonusBlackMarketCardTop.at(blackMarketCard.first));
+                }
+                else
+                {
+                    LOG(ERROR, "Invalid Black Market Card value %d", blackMarketCard.second);
                 }
             }
         }
@@ -553,6 +589,24 @@ std::vector<CardName> &Game::getPile(const int pile)
 }
 
 /**
+ * @brief The return value is 2 if Merchant is the first one get this type of Black Market Card, 1 if Merchant is the second one get this type of Black Market Card, 0 otherwise
+ *
+ * @param card
+ * @return int
+ */
+int Game::getBlackMarketCards(const CardName card)
+{
+    std::lock_guard<std::mutex> lock(mBlackMarketCardsMutex);
+    int result = mBlackMarketCards[card];
+    if (result <= 0)
+    {
+        return 0;
+    }
+    mBlackMarketCards[card]--;
+    return result;
+}
+
+/**
  * @brief Increase mCurrentRound by 1. Check mPlayerOrder is empty and playerSheriffTimes is 0
  *
  * @return true
@@ -572,7 +626,6 @@ bool Game::isGameEnded()
  *
  * @return int
  */
-
 bool Game::isSheriffTransfer()
 {
     /* TODO: Handle the situation when Player is playing then disconnect to internet */
@@ -606,13 +659,23 @@ int Game::getSheriffSocketID()
     return mSheriffSocketID;
 }
 
+int Game::getMerchantSocketID()
+{
+    return mMerchantSocketID;
+}
+
+/**
+ * @brief Determine the next merchant, this function should be used once each turn/round
+ *
+ * @return int - mMerchantSocketID
+ */
 int Game::getMerchantTurnSocketID()
 {
     if (!mMerchantOrder.empty())
     {
-        int merchantSocketID = mMerchantOrder.front();
+        mMerchantSocketID = mMerchantOrder.front();
         mMerchantOrder.pop();
-        return merchantSocketID;
+        return mMerchantSocketID;
     }
     else
     {
@@ -707,4 +770,28 @@ bool Bag::clearBag()
 bool Bag::isEmpty()
 {
     return mBagCards.empty();
+}
+
+bool Game::tradeContrabandToCards(const int socketID)
+{
+    if (!isBlackMarketCardsApplied)
+    {
+        LOG(INFO, "Black market cards are not applied");
+        return false;
+    }
+    const std::vector<CardName> contrabandCard = {SILK, MEAD, PEPPER};
+    Player &player = getPlayer(socketID);
+    for (const CardName &card : contrabandCard)
+    {
+        if (player.getGoods().at(card) >= CONTRABAND_TO_MARKET_CARDS_LIMIT)
+        {
+            for (int i = 0; i < CONTRABAND_TO_MARKET_CARDS_LIMIT; i++)
+            {
+                player.removeCardFromGoods(card);
+            }
+            player.addBlackMarketCard(card, getBlackMarketCards(card));
+            return true;
+        }
+    }
+    return false;
 }

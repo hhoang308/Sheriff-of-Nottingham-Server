@@ -6,11 +6,20 @@
 
 #define CARD_SIZE 8
 #define MAX_CARD_OF_PLAYER 6
+#define CONTRABAND_TO_MARKET_CARDS_LIMIT 3
 
 enum CardType
 {
     LEGAL,
     CONTRABAND
+};
+
+enum BlackMarketCard
+{
+    NO_BLACK_MARKET_CARD = 0, /* Merchant doesn't have any black market card */
+    BLACK_MARKET_CARD_TOP,    /* Merchant has the first black market card */
+    BLACK_MARKET_CARD_BOT,    /* Merchant has the second black market card */
+    BLACK_MARKET_CARD_BOTH    /* Merchant has both the first and the second of the black market cards */
 };
 
 // Enum for card names, as there are only 8 types
@@ -44,6 +53,10 @@ extern const std::unordered_map<CardName, int> cardPenalty;
 extern const std::unordered_map<CardName, int> bonusPointsChampion;
 
 extern const std::unordered_map<CardName, int> bonusPointRunnerUp;
+
+extern const std::unordered_map<CardName, int> bonusBlackMarketCardTop; /* First Merchant gets 3 cards of the same Contraband type */
+
+extern const std::unordered_map<CardName, int> bonusBlackMarketCardBot; /* Second Merchant gets 3 cards of the same Contraband type */
 
 std::string getCardNameString(const CardName card);
 

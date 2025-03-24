@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <Utils.h>
 #include "Card.h"
 
 /* TODO: consider change role to class sheriff and class merchant, write abtract function for each type */
@@ -29,7 +30,7 @@ enum PlayerState
     /* Sheriff */
     PLAYER_INSPECTING,
 
-    PLAYER_RECEIVED_CHECK,
+    PLAYER_RECEIVED_INFO,
     PLAYER_RECEIVING,
     PLAYER_INVALID_STATE
 };
@@ -63,10 +64,13 @@ public:
     bool addCardToHand(const CardName card);
     bool removeCardFromHand(const CardName card);
     bool addCardToGoods(const CardName card);
+    bool removeCardFromGoods(const CardName card);
+    bool addBlackMarketCard(const CardName card, const int value);
 
     const std::unordered_map<CardName, int> &getGoods() const;
     const std::vector<CardName> &getHand() const;
-    /* TODO: a funtion to create instance for each player */
+    const std::unordered_map<CardName, int> &getBlackMarketCard() const;
+    Json::Value getPlayerInfo();
 
 private:
     int mGameID;
@@ -81,6 +85,7 @@ private:
     std::vector<CardName> mPlayerHand;
     std::vector<CardName> mPlayerBag;
     std::unordered_map<CardName, int> mPlayerGoods;
+    std::unordered_map<CardName, int> mPlayerBlackMarketCards; /* Stores Black Market Cards - Value of each Black Market Card */
 };
 
 #endif // PLAYER_H

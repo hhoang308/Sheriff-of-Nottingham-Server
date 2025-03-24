@@ -103,6 +103,16 @@ bool Player::removeCardFromHand(const CardName card)
     return false;
 }
 
+bool Player::removeCardFromGoods(const CardName card)
+{
+    if (mPlayerGoods[card] > 0)
+    {
+        mPlayerGoods[card]--;
+        return true;
+    }
+    return false;
+}
+
 const std::vector<CardName> &Player::getHand() const
 {
     return mPlayerHand;
@@ -140,4 +150,46 @@ int Player::getPlayerPoints()
 void Player::addPlayerPoints(int amount)
 {
     mPlayerPoints += amount;
+}
+/**
+ * @brief add black market card, value is 2 if Merchant is the first one who get black market card, 1 otherwise
+ *
+ * @param card
+ * @param value
+ * @return true if success
+ * @return false if fail
+ */
+bool Player::addBlackMarketCard(const CardName card, const int value)
+{
+    mPlayerBlackMarketCards[card] = value;
+    return true;
+}
+
+const std::unordered_map<CardName, int> &Player::getBlackMarketCard() const
+{
+    return mPlayerBlackMarketCards;
+}
+
+Json::Value Player::getPlayerInfo()
+{
+    Json::Value playerInfoMessage;
+    playerInfoMessage["MessageType"] = "PLAYER_UPDATE_INFO";
+    playerInfoMessage["PlayerName"] = mPlayerName;
+    playerInfoMessage["Money"] = std::to_string(mPlayerGold);
+    Json::Value playerTradedCards;
+    std::vector<CardName> cardList = {APPLE, CHEESE, BREAD, CHICKEN, PEPPER, MEAD, SILK, CROSSBOW};
+    for (auto &card : cardList)
+    {
+        playerTradedCards[cardNameToString.at(card)] = std::to_string(mPlayerGoods[card]);
+    }
+    playerInfoMessage["Cards"] = jsonToString(playerTradedCards);
+    Json::Value playerBlackMarketCards;
+    std::vector<CardName> contrabandCards = {PEPPER, MEAD, SILK};
+    for (auto &card : contrabandCards)
+    {
+        playerBlackMarketCards[cardNameToString.at(card)] = std::to_string(mPlayerBlackMarketCards[card]);
+    }
+    playerInfoMessage["BlackMarketBonus"] = jsonToString(playerBlackMarketCards);
+    LOG(DEBUG, "Player info %s", jsonToString(playerInfoMessage).c_str());
+    return playerInfoMessage;
 }

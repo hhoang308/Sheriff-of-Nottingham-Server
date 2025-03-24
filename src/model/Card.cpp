@@ -70,6 +70,18 @@ const std::unordered_map<CardName, int> bonusPointRunnerUp = {
     {CHICKEN, 5},
 };
 
+const std::unordered_map<CardName, int> bonusBlackMarketCardTop = {
+    {PEPPER, 30},
+    {MEAD, 32},
+    {SILK, 34},
+};
+
+const std::unordered_map<CardName, int> bonusBlackMarketCardBot = {
+    {PEPPER, 27},
+    {MEAD, 29},
+    {SILK, 31},
+};
+
 std::string getCardNameString(const CardName card)
 {
     return cardNameToString.at(card);
