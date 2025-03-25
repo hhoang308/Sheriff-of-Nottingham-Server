@@ -17,8 +17,8 @@ enum CardType
 enum BlackMarketCard
 {
     NO_BLACK_MARKET_CARD = 0, /* Merchant doesn't have any black market card */
-    BLACK_MARKET_CARD_TOP,    /* Merchant has the first black market card */
     BLACK_MARKET_CARD_BOT,    /* Merchant has the second black market card */
+    BLACK_MARKET_CARD_TOP,    /* Merchant has the first black market card */
     BLACK_MARKET_CARD_BOTH    /* Merchant has both the first and the second of the black market cards */
 };
 

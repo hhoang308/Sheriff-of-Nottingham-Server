@@ -161,7 +161,7 @@ void Player::addPlayerPoints(int amount)
  */
 bool Player::addBlackMarketCard(const CardName card, const int value)
 {
-    mPlayerBlackMarketCards[card] = value;
+    mPlayerBlackMarketCards[card] += value;
     return true;
 }
 
