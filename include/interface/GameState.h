@@ -24,7 +24,7 @@ public:
 
     virtual void receiveMessage(Game *server, const std::string &message, const int socketID)
     {
-        LOG(INFO, "socketID %d message '%s' ", socketID, message.c_str());
+        // LOG(INFO, "socketID %d message '%s' ", socketID, message.c_str());
 
         Json::Value curJson = stringToJson(message);
 

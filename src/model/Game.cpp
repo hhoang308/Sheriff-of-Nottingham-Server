@@ -97,7 +97,7 @@ bool Game::removePlayer(int socketId)
 
 Player &Game::getPlayer(int socketId)
 {
-    // LOG(INFO, "getPlayer() %d", socketId);
+    LOG(DEBUG, "getPlayer() %d", socketId);
     std::lock_guard<std::mutex> lock(mPlayerMutex);
 
     for (auto &pair : mPlayers)
@@ -238,7 +238,7 @@ CardName Game::withdrawDeck()
         return INVALID_CARD;
     }
     CardName topCardOfDeck = mDeck.back();
-    LOG(INFO, "Withdraw Deck %s", cardNameToString.at(topCardOfDeck).c_str());
+    LOG(DEBUG, "Withdraw Deck %s", cardNameToString.at(topCardOfDeck).c_str());
     mDeck.pop_back();
     return topCardOfDeck;
 }
@@ -783,7 +783,7 @@ bool Game::tradeContrabandToCards(const int socketID)
     Player &player = getPlayer(socketID);
     for (const CardName &card : contrabandCard)
     {
-        if (player.getGoods().at(card) >= CONTRABAND_TO_MARKET_CARDS_LIMIT)
+        if (player.getGoods().count(card) > 0 && player.getGoods().at(card) >= CONTRABAND_TO_MARKET_CARDS_LIMIT)
         {
             for (int i = 0; i < CONTRABAND_TO_MARKET_CARDS_LIMIT; i++)
             {
