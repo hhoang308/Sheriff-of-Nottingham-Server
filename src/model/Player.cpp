@@ -182,14 +182,14 @@ Json::Value Player::getPlayerInfo()
     {
         playerTradedCards[cardNameToString.at(card)] = std::to_string(mPlayerGoods[card]);
     }
-    playerInfoMessage["Cards"] = jsonToString(playerTradedCards);
+    playerInfoMessage["Cards"] = playerTradedCards;
     Json::Value playerBlackMarketCards;
     std::vector<CardName> contrabandCards = {PEPPER, MEAD, SILK};
     for (auto &card : contrabandCards)
     {
         playerBlackMarketCards[cardNameToString.at(card)] = std::to_string(mPlayerBlackMarketCards[card]);
     }
-    playerInfoMessage["BlackMarketBonus"] = jsonToString(playerBlackMarketCards);
+    playerInfoMessage["BlackMarketBonus"] = playerBlackMarketCards;
     LOG(DEBUG, "Player info %s", jsonToString(playerInfoMessage).c_str());
     return playerInfoMessage;
 }

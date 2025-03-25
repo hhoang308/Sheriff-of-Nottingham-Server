@@ -30,13 +30,13 @@ TEST(checkPlayer, testGetPlayerInfo)
     cardList["Mead"] = "0";
     cardList["Silk"] = "3";
     cardList["Crossbow"] = "0";
-    jsonValue["Cards"] = jsonToString(cardList);
+    jsonValue["Cards"] = cardList;
 
     Json::Value blackCardList;
     blackCardList["Pepper"] = "0";
     blackCardList["Mead"] = "0";
     blackCardList["Silk"] = "0";
-    jsonValue["BlackMarketBonus"] = jsonToString(blackCardList);
+    jsonValue["BlackMarketBonus"] = blackCardList;
 
     ASSERT_EQ(jsonToString(curGame->getPlayer(1).getPlayerInfo()), jsonToString(jsonValue));
 }
