@@ -84,10 +84,18 @@ const std::unordered_map<CardName, int> bonusBlackMarketCardBot = {
 
 std::string getCardNameString(const CardName card)
 {
+    if (cardNameToString.find(card) == cardNameToString.end())
+    {
+        return "INVALID_CARD";
+    }
     return cardNameToString.at(card);
 }
 
 std::string getCardTypeString(const CardName card)
 {
+    if (cardNameToCardType.find(card) == cardNameToCardType.end())
+    {
+        return "INVALID_CARD";
+    }
     return cardTypeToString.at(cardNameToCardType.at(card));
 }
