@@ -41,7 +41,7 @@ void SheriffTurnState::handleResponse(Game *curGame, const Json::Value &jsonMess
     if (reasonType == "SHERIFF_CHECK_RESPONSE" || reasonType == "SHERIFF_PASS_RESPONSE")
     {
         Player &merchantPlayer = curGame->getPlayer(curGame->getMerchantSocketID());
-        curGame->sendMessageToAll(jsonToString(merchantPlayer.getPlayerInfo()));
+        curGame->sendMessageToClient(jsonToString(merchantPlayer.getPlayerInfo()), socketID);
 
         return;
     }
@@ -53,7 +53,7 @@ void SheriffTurnState::handleResponse(Game *curGame, const Json::Value &jsonMess
     else if (reasonType == "PLAYER_UPDATE_INFO")
     {
         Player &sheriffPlayer = curGame->getPlayer(curGame->getSheriffSocketID());
-        curGame->sendMessageToAll(jsonToString(sheriffPlayer.getPlayerInfo()));
+        curGame->sendMessageToClient(jsonToString(sheriffPlayer.getPlayerInfo()), socketID);
 
         curPlayer.setState(PLAYER_RECEIVED_INFO);
         for (const auto &player : curGame->getAllPlayers())
