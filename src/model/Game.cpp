@@ -30,14 +30,14 @@ Game::~Game()
 
 void Game::setState(GameState *newState)
 {
-    LOG(INFO, "previousState %s", newState->getStateName().c_str());
+    LOG(INFO, "previousState %s", currentState->getStateName().c_str());
     delete currentState;
     currentState = newState;
     if (currentState)
     {
         currentState->enterState(this);
     }
-    LOG(INFO, "currentState %s", currentState->getStateName().c_str());
+    LOG(INFO, "currentState %s", newState->getStateName().c_str());
 }
 
 void Game::handleMessage(const std::string &message, const int socketId)
@@ -97,7 +97,7 @@ bool Game::removePlayer(int socketId)
 
 Player &Game::getPlayer(int socketId)
 {
-    LOG(DEBUG, "getPlayer() %d", socketId);
+    // LOG(DEBUG, "getPlayer() %d", socketId);
     std::lock_guard<std::mutex> lock(mPlayerMutex);
 
     for (auto &pair : mPlayers)
