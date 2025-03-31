@@ -1,0 +1,29 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ "dev" ]
+  pull_request:
+    branches: [ "dev" ]
+
+jobs:
+  build: 
+
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Checkout repository
+      run: actions/checkout@v3
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install build-essential cmake pkg-config libgtest-dev
+      
+    - name: Build
+      run: ./build.sh
+      
+    - name: Run unit tests
+      run: cd build && ctest --output-on-failure
