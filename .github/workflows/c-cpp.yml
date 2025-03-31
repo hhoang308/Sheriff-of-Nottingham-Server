@@ -23,7 +23,7 @@ jobs:
         sudo apt-get install build-essential cmake pkg-config libgtest-dev
       
     - name: Build
-      run: ./build.sh
+      run: ./build.sh --tests
       
     - name: Run unit tests
       run: cd build && ctest --output-on-failure
