@@ -1,0 +1,152 @@
+@startuml
+entity Server as server
+participant "Merchant\n**//trading//**" as merchant
+participant Sheriff as sheriff
+participant "Merchant\n**//waiting//**" as other
+
+autonumber
+skinparam sequenceMessageAlign direction
+
+== State 3: Round Started ==
+
+opt all players have run out of turns as sheriff \nand there are no more merchants waiting for their turn.
+note over server : set GameEndedState
+end opt
+
+opt there are no more merchants waiting for their turn
+server -> merchant : GAME_DEALS_ROLE\n//SHERIFF//
+merchant --> server : PLAYER_RESPONSE\n//GAME_DEALS_ROLE//
+server -> sheriff : GAME_DEALS_ROLE\n//SHERIFF//
+sheriff --> server : PLAYER_RESPONSE\n//GAME_DEALS_ROLE//
+server -> other: GAME_DEALS_ROLE\n//SHERIFF//
+other --> server : PLAYER_RESPONSE\n//GAME_DEALS_ROLE//
+end otp
+
+server -> merchant : GAME_DEALS_CARDS\n//Cards//
+merchant --> server : PLAYER_RESPONSE\n//GAME_DEALS_CARDS//
+server -> sheriff : GAME_DEALS_CARDS\n//Cards//
+sheriff --> server : PLAYER_RESPONSE\n//GAME_DEALS_CARDS//
+server -> other: GAME_DEALS_CARDS\n//Cards//
+other --> server : PLAYER_RESPONSE\n//GAME_DEALS_CARDS//
+
+opt not received response of all players
+server -> server : wait
+end opt
+
+note over server : set MerchantTurnState
+
+== State 4 : Merchant Turn ==
+
+server -> merchant : GAME_START_TURN\n//Name of Merchant//
+merchant --> server : PLAYER_RESPONSE\n//GAME_START_TURN//
+server -> sheriff : GAME_START_TURN\n//Name of Merchant//
+sheriff --> server : PLAYER_RESPONSE\n//GAME_START_TURN//
+server -> other: GAME_START_TURN\n//Name of Merchant//
+other --> server : PLAYER_RESPONSE\n//GAME_START_TURN//
+
+opt not merchant turn
+server -> server : wait
+end opt
+
+merchant -> server : MERCHANT_DISCARD_REQUEST
+server -> merchant : MERCHANT_DISCARD_REQUEST_RESPONSE
+merchant --> server : PLAYER_RESPONSE\n//MERCHANT_DISCARD_REQUEST_RESPONSE//
+server --> sheriff : MERCHANT_DISCARD_REQUEST_RESPONSE
+sheriff --> server : PLAYER_RESPONSE\n//MERCHANT_DISCARD_REQUEST_RESPONSE//
+server --> other : MERCHANT_DISCARD_REQUEST_RESPONSE
+other --> server : PLAYER_RESPONSE\n//MERCHANT_DISCARD_REQUEST_RESPONSE//
+
+opt not received response of all players
+server -> server : wait
+end opt
+
+merchant -> server : MERCHANT_WITHDRAW_CARDS
+server --> merchant : MERCHANT_WITHDRAW_CARDS_RESPONSE
+merchant --> server : PLAYER_RESPONSE\n//MERCHANT_WITHDRAW_CARDS_RESPONSE//
+
+opt merchant withdraws from discard pile
+server --> sheriff : MERCHANT_WITHDRAW_CARDS_RESPONSE
+sheriff --> server : PLAYER_RESPONSE\n//MERCHANT_WITHDRAW_CARDS_RESPONSE//
+server --> other : MERCHANT_WITHDRAW_CARDS_RESPONSE
+other --> server : PLAYER_RESPONSE\n//MERCHANT_WITHDRAW_CARDS_RESPONSE//
+end opt
+
+opt not received response of all players
+server -> server : wait
+end opt
+
+merchant -> server : MERCHANT_DISCARD_CARDS
+server --> merchant : MERCHANT_DISCARD_CARDS_RESPONSE
+merchant --> server : PLAYER_RESPONSE\n//MERCHANT_DISCARD_CARDS_RESPONSE//
+server --> sheriff : MERCHANT_DISCARD_CARDS_RESPONSE
+sheriff --> server : PLAYER_RESPONSE\n//MERCHANT_DISCARD_CARDS_RESPONSE//
+server --> other: MERCHANT_DISCARD_CARDS_RESPONSE
+other --> server : PLAYER_RESPONSE\n//MERCHANT_DISCARD_CARDS_RESPONSE//
+
+opt not received response of all players
+server -> server : wait
+end opt
+
+merchant -> server : MERCHANT_GIVE_BAG
+server --> merchant : MERCHANT_GIVE_BAG_RESPONSE
+merchant --> server : PLAYER_RESPONSE\n//MERCHANT_GIVE_BAG_RESPONSE//
+server --> sheriff: MERCHANT_GIVE_BAG_RESPONSE
+sheriff --> server : PLAYER_RESPONSE\n//MERCHANT_GIVE_BAG_RESPONSE//
+server --> other : MERCHANT_GIVE_BAG_RESPONSE
+other --> server : PLAYER_RESPONSE\n//MERCHANT_GIVE_BAG_RESPONSE//
+
+opt not received response of all players
+server -> server : wait
+end opt
+
+server -> server : set SheriffTurnState
+
+== State 5 : Sheriff Turn == 
+
+server -> sheriff : GAME_START_TURN\n//Name of Sheriff//
+sheriff --> server : PLAYER_RESPONSE\n//GAME_START_TURN//
+server -> merchant: GAME_START_TURN\n//Name of Sheriff//
+merchant--> server : PLAYER_RESPONSE\n//GAME_START_TURN//
+server -> other: GAME_START_TURN\n//Name of Sheriff//
+other --> server : PLAYER_RESPONSE\n//GAME_START_TURN//
+
+opt not received response of all players
+server -> server : wait
+end opt
+
+server -> sheriff : SHERIFF_CHECK/SHERIFF_PASS
+server -> server : calculate penalty
+
+server --> sheriff: SHERIFF_CHECK/PASS_RESPONSE
+sheriff --> server : PLAYER_RESPONSE\n//SHERIFF_CHECK/PASS_RESPONSE//
+server -> sheriff : PLAYER_UPDATE_INFO\n//Sheriff Infomation//
+sheriff --> server : PLAYER_RESPONSE\n//PLAYER_UPDATE_INFO//
+
+server --> merchant : SHERIFF_CHECK_RESPONSE/SHERIFF_PASS_RESPONSE
+merchant --> server : PLAYER_RESPONSE\n//SHERIFF_CHECK/PASS_RESPONSE//
+server -> merchant : PLAYER_UPDATE_INFO\n//Sheriff Infomation//
+merchant --> server : PLAYER_RESPONSE\n//PLAYER_UPDATE_INFO//
+
+server --> other : PLAYER_RESPONSE\n//SHERIFF_CHECK/PASS_RESPONSE//
+other --> server : PLAYER_RESPONSE\n//SHERIFF_CHECK/PASS_RESPONSE//
+server -> other : PLAYER_UPDATE_INFO\n//Sheriff Infomation//
+other --> server : PLAYER_RESPONSE\n//PLAYER_UPDATE_INFO//
+
+opt not received response of all players
+server -> server : wait
+end opt
+
+server -> sheriff : PLAYER_UPDATE_INFO\n//Merchant Infomation//
+sheriff --> server: PLAYER_RESPONSE\n//PLAYER_UPDATE_INFO//
+server -> merchant : PLAYER_UPDATE_INFO\n//Merchant Infomation//
+merchant --> server: PLAYER_RESPONSE\n//PLAYER_UPDATE_INFO//
+server -> other: PLAYER_UPDATE_INFO\n//Merchant Infomation//
+other --> server: PLAYER_RESPONSE\n//PLAYER_UPDATE_INFO//
+
+opt there aren't merchants waiting for their turn
+note over server : set RoundStartedState
+else 
+note over server : set MerchantTurnState
+end opt
+
+@enduml

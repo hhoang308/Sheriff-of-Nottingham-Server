@@ -1,0 +1,80 @@
+@startuml
+actor Player as player
+entity Server as server
+
+autonumber
+skinparam sequenceMessageAlign direction
+
+== State 1: Waiting For Player == 
+
+player -> server : connect
+
+opt server isn't running
+server --> player !!: notify
+end opt
+
+player -> player : fill //Name//
+player -> server : PLAYER_JOIN
+
+opt player's name existed
+server --> player !!: GAME_REJECT_PLAYER\n//SAME_NAME_EXISTS//
+else game is full
+server --> player !!: GAME_REJECT_PLAYER\n//FULL//
+else game is started
+server --> player !!: GAME_REJECT_PLAYER\n//GAME_STARTED//
+end opt
+
+server -> player : GAME_ACCEPT_PLAYER
+player --> server : PLAYER_RESPONSE\n//GAME_ACCEPT_PLAYER//
+
+opt there is player(s) already in
+server -> player : GAME_CONNECTED_PLAYER_RECENT\n//PlayersName//
+player --> server : PLAYER_RESPONSE\n//GAME_CONNECTED_PLAYER_RECENT//
+opt there is player(s) is in //READY// state
+server -> player : GAME_ACCEPT_READY
+player --> server : PLAYER_RESPONSE\n//GAME_ACCEPT_READY//
+end opt
+else there is a new player just entered
+server -> player : GAME_CONNECTED_PLAYER_NOW\n//PlayerName//
+player --> server : PLAYER_RESPONSE\n//GAME_CONNECTED_PLAYER_NOW//
+end opt
+
+opt player pressed //READY//
+player -> server : PLAYER_READY
+server --> player : GAME_ACCEPT_READY
+player --> server : PLAYER_RESPONSE\n//GAME_ACCEPT_READY//
+else player pressed //UNREADY//
+player -> server : PLAYER_UNREADY
+server --> player : GAME_ACCEPT_UNREADY
+player --> server : PLAYER_RESPONSE\n//GAME_ACCEPT_UNREADY//
+end opt
+
+opt less than 3 players //READY//
+server -> server : wait
+end opt
+
+note over server: set GameStartedState
+
+== State 2: Game Started == 
+
+server -> server : createGameDetails()\n//mPlayerSheriffTimes//\n//mSheriffIndex//\n//mDeck//\n//mLeftPile//\n//mRightPile//\n//mBlackMarketCards//
+server -> player : GAME_START
+player --> server : PLAYER_RESPONSE\n//GAME_START//
+opt not received response of all players
+server -> server : wait
+end opt
+server -> player : DISCARD_PILES
+player --> server : PLAYER_RESPONSE\n//DISCARD_PILES//
+
+opt not received response of all players
+server -> server : wait
+end opt
+
+note over server : set RoundStartedState
+
+== State 6 : Game Ended ==
+
+server -> server : calculate points of players
+server -> player !!: GAME_END
+
+@enduml
