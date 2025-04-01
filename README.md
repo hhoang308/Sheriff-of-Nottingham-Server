@@ -1,9 +1,3 @@
-## [Contribution] Commit message rule
-```
-<action> <subject> <optional extra information>
-
-- <additional information>
-```
 ## Precondition
 ### Install dependencies
 ```
@@ -43,3 +37,12 @@ then execute unit tests
 cd build/
 ctest
 ```
+## [Contribution] Commit message rule
+```
+<action> <subject> <optional extra information>
+
+- <additional information>
+```
+### Sequence Diagram
+![Waiting For Player, Game Started, Game Ended](image.png)
+![Round Started, Merchant Turn, Sheriff Turn](image-1.png)
