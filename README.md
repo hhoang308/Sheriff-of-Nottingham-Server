@@ -44,5 +44,5 @@ ctest
 - <additional information>
 ```
 ### Sequence Diagram
-![Waiting For Player, Game Started, Game Ended](diargram/image.png)
+![Waiting For Player, Game Started, Game Ended](diagram/image.png)
 ![Round Started, Merchant Turn, Sheriff Turn](diagram/image-1.png)
