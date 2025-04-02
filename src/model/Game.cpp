@@ -800,11 +800,16 @@ bool Game::tradeContrabandToCards(const int socketID)
     {
         if (player.getGoods().count(card) > 0 && player.getGoods().at(card) >= CONTRABAND_TO_MARKET_CARDS_LIMIT)
         {
+            int blackMarketCard = getBlackMarketCards(card);
+            if(blackMarketCard == 0)
+            {
+                return false;
+            }
             for (int i = 0; i < CONTRABAND_TO_MARKET_CARDS_LIMIT; i++)
             {
                 player.removeCardFromGoods(card);
             }
-            player.addBlackMarketCard(card, getBlackMarketCards(card));
+            player.addBlackMarketCard(card, blackMarketCard);
             return true;
         }
     }
