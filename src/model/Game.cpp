@@ -317,7 +317,7 @@ std::vector<Player *> Game::findWinner()
 void Game::calculatePoints()
 {
     /* Calculate points from Legal Cards */
-    std::vector<CardName> cardList = {APPLE, CHEESE, BREAD, CHICKEN, PEPPER, MEAD, SILK, CROSSBOW};
+    std::vector<CardName> cardList = {APPLE, CHEESE, BREAD, CHICKEN};
     for (auto &card : cardList)
     {
         int kingCount = 0;  /* Most card player have */
@@ -438,6 +438,22 @@ void Game::calculatePoints()
         }
     }
 
+    /* Calculate points from Illegal Cards */
+    const std::vector<CardName> illegalCardList = {PEPPER, MEAD, SILK, CROSSBOW};
+    for(const CardName &card : illegalCardList)
+    {
+        for (auto &player : mPlayers)
+        {
+            for (auto &good : player.second->getGoods())
+            {
+                if(good.first == card && good.second > 0)
+                {
+                    player.second->addPlayerPoints(cardValue.at(card) * good.second);
+                }
+            }
+        }
+    }
+
     /* Calculate points from Black Market Card */
     if (isBlackMarketCardsApplied)
     {
@@ -455,8 +471,7 @@ void Game::calculatePoints()
                 }
                 else if (blackMarketCard.second == BLACK_MARKET_CARD_BOTH)
                 {
-                    player.second->addPlayerPoints(bonusBlackMarketCardBot.at(blackMarketCard.first));
-                    player.second->addPlayerPoints(bonusBlackMarketCardTop.at(blackMarketCard.first));
+                    player.second->addPlayerPoints(bonusBlackMarketCardBot.at(blackMarketCard.first) + bonusBlackMarketCardTop.at(blackMarketCard.first));
                 }
                 else
                 {
