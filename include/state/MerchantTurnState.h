@@ -1,4 +1,5 @@
 #include "GameState.h"
+#include "Player.h"
 #include <iostream>
 #include <unordered_map>
 
@@ -15,6 +16,11 @@ private:
     int mMerchantSocketID;
     int mNumberOfCards;
     MerchantState mMerchantState;
+
+    void handleDiscardRequest(Game *curGame, const Json::Value& jsonMessage, const int socketID, Player& curPlayer);
+    void handleWithdrawCards(Game *curGame, const Json::Value& jsonMessage, const int socketID, Player& curPlayer);
+    void handleDiscardCards(Game *curGame, const Json::Value& jsonMessage, const int socketID, Player& curPlayer);
+    void handleGiveBag(Game *curGame, const Json::Value& jsonMessage, const int socketID, Player& curPlayer);
 
 public:
     MerchantTurnState();
