@@ -90,10 +90,10 @@ end opt
 merchant -> server : MERCHANT_GIVE_BAG
 server --> merchant : MERCHANT_GIVE_BAG_RESPONSE
 merchant --> server : PLAYER_RESPONSE\n//MERCHANT_GIVE_BAG_RESPONSE//
-server --> sheriff: MERCHANT_GIVE_BAG_RESPONSE
-sheriff --> server : PLAYER_RESPONSE\n//MERCHANT_GIVE_BAG_RESPONSE//
-server --> other : MERCHANT_GIVE_BAG_RESPONSE
-other --> server : PLAYER_RESPONSE\n//MERCHANT_GIVE_BAG_RESPONSE//
+server --> sheriff: MERCHANT_GIVE_BAG
+sheriff --> server : PLAYER_RESPONSE\n//MERCHANT_GIVE_BAG//
+server --> other : MERCHANT_GIVE_BAG
+other --> server : PLAYER_RESPONSE\n//MERCHANT_GIVE_BAG//
 
 opt not received response of all players
 server -> server : wait
@@ -114,7 +114,7 @@ opt not received response of all players
 server -> server : wait
 end opt
 
-server -> sheriff : SHERIFF_CHECK/SHERIFF_PASS
+sheriff -> server : SHERIFF_CHECK/SHERIFF_PASS
 server -> server : calculate penalty
 
 server --> sheriff: SHERIFF_CHECK/PASS_RESPONSE
