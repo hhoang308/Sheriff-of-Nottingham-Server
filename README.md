@@ -46,5 +46,6 @@ ctest
 ### Sequence Diagram
 Waiting For Player, Game Started, Game Ended
 ![Waiting For Player, Game Started, Game Ended](diagram/waitingForPlayer.png)
+
 Round Started, Merchant Turn, Sheriff Turn
 ![Round Started, Merchant Turn, Sheriff Turn](diagram/roundStarted.png)
