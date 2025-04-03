@@ -227,7 +227,50 @@ bool Game::createGameDetails()
     return true;
 }
 
-/* TODO: Handle the situation when Deck is empty */
+bool Game::recreateDeck()
+{
+    if(!mDeck.empty())
+    {
+        LOG(ERROR, "mDeck isn't empty");
+        return false;
+    }
+
+    if(mLeftPile.size() + mRightPile.size() <= 10)
+    {
+        LOG(ERROR, "mLeftPile and mRightPile dont have enough cards");
+        return false;
+    }
+
+    while(!mLeftPile.empty()){
+        mDeck.emplace_back(mLeftPile.back());
+        mLeftPile.pop_back();
+    }
+
+    while(!mRightPile.empty()){
+        mDeck.emplace_back(mRightPile.back());
+        mRightPile.pop_back();
+    }
+
+    // Shuffle the deck
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(mDeck.begin(), mDeck.end(), g);
+
+    // Take 5 random cards for mLeftPile and mRightPile
+    for (int i = 0; i < 5; ++i)
+    {
+        mLeftPile.push_back(mDeck.back());
+        mDeck.pop_back();
+    }
+
+    for (int i = 0; i < 5; ++i)
+    {
+        mRightPile.push_back(mDeck.back());
+        mDeck.pop_back();
+    }
+
+    return true;
+}
 
 CardName Game::withdrawDeck()
 {

@@ -100,3 +100,127 @@ TEST(createGameDetailsTest, TestWithInvalidPlayerCount)
     EXPECT_TRUE(leftPile.empty());
     EXPECT_TRUE(rightPile.empty());
 }
+
+TEST(createGameDetailsTest, testRecreateDeckSuccess1)
+{
+    Game *curGame = new Game(GAME_ID_DEFAULT);
+
+    for (int i = 0; i < 3; i++)
+    {
+        std::string playerName = "Player" + std::to_string(i);
+        int socketID = i;
+        curGame->addPlayer(socketID, GAME_ID_DEFAULT, playerName);
+    }
+
+    (void)curGame->createGameDetails();
+
+    while(!curGame->getDeck().empty()){
+        curGame->insertPile(curGame->withdrawDeck(), LEFT_PILE);
+    }
+    EXPECT_TRUE(curGame->recreateDeck());
+    EXPECT_EQ(curGame->getDeck().size(), EXPECTED_DECK_SIZE_3PLAYER - 5 * 2);
+    EXPECT_EQ(curGame->getPile(LEFT_PILE).size(), 5);
+    EXPECT_EQ(curGame->getPile(RIGHT_PILE).size(), 5);
+}
+
+TEST(createGameDetailsTest, testRecreateDeckSuccess2)
+{
+    Game *curGame = new Game(GAME_ID_DEFAULT);
+
+    for (int i = 0; i < 3; i++)
+    {
+        std::string playerName = "Player" + std::to_string(i);
+        int socketID = i;
+        curGame->addPlayer(socketID, GAME_ID_DEFAULT, playerName);
+    }
+
+    (void)curGame->createGameDetails();
+
+    while(!curGame->getDeck().empty()){
+        curGame->insertPile(curGame->withdrawDeck(), RIGHT_PILE);
+    }
+    EXPECT_TRUE(curGame->recreateDeck());
+    EXPECT_EQ(curGame->getDeck().size(), EXPECTED_DECK_SIZE_3PLAYER - 5 * 2);
+    EXPECT_EQ(curGame->getPile(LEFT_PILE).size(), 5);
+    EXPECT_EQ(curGame->getPile(RIGHT_PILE).size(), 5);
+}
+
+TEST(createGameDetailsTest, testRecreateDeckSuccess3)
+{
+    Game *curGame = new Game(GAME_ID_DEFAULT);
+
+    for (int i = 0; i < 3; i++)
+    {
+        std::string playerName = "Player" + std::to_string(i);
+        int socketID = i;
+        curGame->addPlayer(socketID, GAME_ID_DEFAULT, playerName);
+    }
+
+    (void)curGame->createGameDetails();
+
+    while(!curGame->getDeck().empty()){
+        curGame->insertPile(curGame->withdrawDeck(), RIGHT_PILE);
+        if(!curGame->getDeck().empty())
+        {
+            curGame->insertPile(curGame->withdrawDeck(), LEFT_PILE);
+        }
+    }
+    EXPECT_TRUE(curGame->recreateDeck());
+    EXPECT_EQ(curGame->getDeck().size(), EXPECTED_DECK_SIZE_3PLAYER - 5 * 2);
+    EXPECT_EQ(curGame->getPile(LEFT_PILE).size(), 5);
+    EXPECT_EQ(curGame->getPile(RIGHT_PILE).size(), 5);
+}
+
+TEST(createGameDetailsTest, testRecreateDeckFail1)
+{
+    Game *curGame = new Game(GAME_ID_DEFAULT);
+
+    for (int i = 0; i < 3; i++)
+    {
+        std::string playerName = "Player" + std::to_string(i);
+        int socketID = i;
+        curGame->addPlayer(socketID, GAME_ID_DEFAULT, playerName);
+    }
+
+    (void)curGame->createGameDetails();
+    EXPECT_FALSE(curGame->recreateDeck());
+}
+
+TEST(createGameDetailsTest, testRecreateDeckFail2)
+{
+    Game *curGame = new Game(GAME_ID_DEFAULT);
+
+    for (int i = 0; i < 3; i++)
+    {
+        std::string playerName = "Player" + std::to_string(i);
+        int socketID = i;
+        curGame->addPlayer(socketID, GAME_ID_DEFAULT, playerName);
+    }
+
+    (void)curGame->createGameDetails();
+
+    while(!curGame->getDeck().empty()){
+        CardName card = curGame->withdrawDeck();
+    }
+    EXPECT_FALSE(curGame->recreateDeck());
+}
+
+
+TEST(createGameDetailsTest, testRecreateDeckFail3)
+{
+    Game *curGame = new Game(GAME_ID_DEFAULT);
+
+    for (int i = 0; i < 3; i++)
+    {
+        std::string playerName = "Player" + std::to_string(i);
+        int socketID = i;
+        curGame->addPlayer(socketID, GAME_ID_DEFAULT, playerName);
+    }
+
+    (void)curGame->createGameDetails();
+
+    while(curGame->getDeck().size() > 1){
+        CardName card = curGame->withdrawDeck();
+    }
+    EXPECT_FALSE(curGame->recreateDeck());
+}

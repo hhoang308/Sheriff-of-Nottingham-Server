@@ -36,6 +36,7 @@ struct Bag
     bool clearBag();
     bool isEmpty();
 };
+
 class Game
 {
 private:
@@ -91,6 +92,7 @@ public:
 
     bool createGameDetails();
     bool dealsCardToPlayers();
+    bool recreateDeck();
 
     bool isGameEnded();
     bool isSheriffTransfer();
