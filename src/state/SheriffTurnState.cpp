@@ -108,12 +108,16 @@ void SheriffTurnState::handleRequest(Game *curGame, const Json::Value &jsonMessa
     if (messageType == "SHERIFF_CHECK")
     {
         forwardMessage["MessageType"] = "SHERIFF_CHECK_RESPONSE";
-        curGame->calculatePenalty(mSheriffSocketID, curBag, false);
+        (void)curGame->calculatePenalty(mSheriffSocketID, curBag, false);
     }
     else if (messageType == "SHERIFF_PASS")
     {
         forwardMessage["MessageType"] = "SHERIFF_PASS_RESPONSE";
-        curGame->calculatePenalty(mSheriffSocketID, curBag, true);
+        int bribedGoodReceiveAmount = curGame->calculatePenalty(mSheriffSocketID, curBag, true);
+        if (bribedGoodReceiveAmount >= 0)
+        {
+            forwardMessage["BribedGoodReceiveAmount"] = std::to_string(bribedGoodReceiveAmount);
+        }
     }
     else
     {

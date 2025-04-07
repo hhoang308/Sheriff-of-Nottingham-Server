@@ -17,16 +17,16 @@ private:
     int mNumberOfCards;
     MerchantState mMerchantState;
 
-    void handleDiscardRequest(Game *curGame, const Json::Value& jsonMessage, const int socketID, Player& curPlayer);
-    void handleWithdrawCards(Game *curGame, const Json::Value& jsonMessage, const int socketID, Player& curPlayer);
-    void handleDiscardCards(Game *curGame, const Json::Value& jsonMessage, const int socketID, Player& curPlayer);
-    void handleGiveBag(Game *curGame, const Json::Value& jsonMessage, const int socketID, Player& curPlayer);
+    void handleDiscardRequest(Game *curGame, const Json::Value &jsonMessage, const int socketID, Player &curPlayer);
+    void handleWithdrawCards(Game *curGame, const Json::Value &jsonMessage, const int socketID, Player &curPlayer);
+    void handleDiscardCards(Game *curGame, const Json::Value &jsonMessage, const int socketID, Player &curPlayer);
+    void handleGiveBag(Game *curGame, const Json::Value &jsonMessage, const int socketID, Player &curPlayer);
 
 public:
     MerchantTurnState();
     ~MerchantTurnState();
-    void handleResponse(Game *curGame, const Json::Value& jsonMessage, const int socketID) override;
-    void handleRequest(Game *curGame, const Json::Value& jsonMessage, const int socketID) override;
+    void handleResponse(Game *curGame, const Json::Value &jsonMessage, const int socketID) override;
+    void handleRequest(Game *curGame, const Json::Value &jsonMessage, const int socketID) override;
     void enterState(Game *curGame) override;
     std::string getStateName() const override;
 };

@@ -14,6 +14,9 @@
 
 MerchantTurnState::MerchantTurnState()
 {
+    mMerchantSocketID = -1;
+    mNumberOfCards = 0;
+    mMerchantState = MERCHANT_IDLE;
     LOG(INFO, "MerchantTurnState initialized");
 }
 
@@ -129,7 +132,7 @@ std::string MerchantTurnState::getStateName() const
     return "MerchantTurnState";
 }
 
-void MerchantTurnState::handleDiscardRequest(Game *curGame, const Json::Value& jsonMessage, const int socketID, Player& curPlayer)
+void MerchantTurnState::handleDiscardRequest(Game *curGame, const Json::Value &jsonMessage, const int socketID, Player &curPlayer)
 {
     if (!jsonMessage.isMember("NumberOfCards") || jsonMessage["NumberOfCards"].isNull())
     {
@@ -151,7 +154,7 @@ void MerchantTurnState::handleDiscardRequest(Game *curGame, const Json::Value& j
     discardMessage["Cards"] = jsonMessage["Cards"];
     curGame->sendMessageToAll(jsonToString(discardMessage));
 }
-void MerchantTurnState::handleWithdrawCards(Game *curGame, const Json::Value& jsonMessage, const int socketID, Player& curPlayer)
+void MerchantTurnState::handleWithdrawCards(Game *curGame, const Json::Value &jsonMessage, const int socketID, Player &curPlayer)
 {
     if (mMerchantState != MERCHANT_READY_TO_RECEIVE)
     {
@@ -212,7 +215,7 @@ void MerchantTurnState::handleWithdrawCards(Game *curGame, const Json::Value& js
     withdrawResponse["Card"] = getCardNameString(card);
     curGame->sendMessageToClient(jsonToString(withdrawResponse), socketID);
 }
-void MerchantTurnState::handleDiscardCards(Game *curGame, const Json::Value& jsonMessage, const int socketID, Player& curPlayer)
+void MerchantTurnState::handleDiscardCards(Game *curGame, const Json::Value &jsonMessage, const int socketID, Player &curPlayer)
 {
     /*  Handle situation card is invalid */
 
@@ -271,7 +274,7 @@ void MerchantTurnState::handleDiscardCards(Game *curGame, const Json::Value& jso
     discardResponse["Card"] = cardNameToString.at(discardCard);
     curGame->sendMessageToAll(jsonToString(discardResponse));
 }
-void MerchantTurnState::handleGiveBag(Game *curGame, const Json::Value& jsonMessage, const int socketID, Player& curPlayer)
+void MerchantTurnState::handleGiveBag(Game *curGame, const Json::Value &jsonMessage, const int socketID, Player &curPlayer)
 {
     if (!jsonMessage.isMember("Fee") || jsonMessage["Fee"].isNull())
     {
@@ -291,18 +294,29 @@ void MerchantTurnState::handleGiveBag(Game *curGame, const Json::Value& jsonMess
 
     const std::string owner = jsonMessage["PlayerName"].asString();
     const int ownerSocketID = mMerchantSocketID;
-    const std::string bribe = jsonMessage["Fee"].asString();
+    const Json::Value bribe = jsonMessage["Fee"];
+    const std::string moneyBribe = jsonMessage["Fee"]["Money"].asString();
+    std::string cardBribe = "";
+    int cardBribeAmount = 0;
+    for (const auto &sCard : stringToCardName)
+    {
+        if (jsonMessage["Fee"].isMember(sCard.first) && !jsonMessage["Fee"][sCard.first].isNull())
+        {
+            cardBribe = sCard.first;
+            cardBribeAmount = stoi(jsonMessage["Fee"][sCard.first].asString());
+        }
+    }
+
     const CardName declared = stringToCardName.at(jsonMessage["Report"].asString());
     int totalCard = 0;
     std::vector<CardName> bagCards;
-    /* TODO: Merchant can only trade upto 5 cards */
     for (const auto &item : jsonMessage["Bag"])
     {
         totalCard++;
         bagCards.push_back(stringToCardName.at(item.asString()));
         curPlayer.removeCardFromHand(stringToCardName.at(item.asString()));
     }
-    if (!curGame->setBag(bagCards, bribe, declared, owner, ownerSocketID))
+    if (!curGame->setBag(bagCards, moneyBribe, cardBribe, cardBribeAmount, declared, owner, ownerSocketID))
     {
         LOG(ERROR, "Invalid bag");
         curGame->sendMessageToClient(createErrorMessage("GAME_REJECT_PLAYER", curPlayer.getName(), "INVALID_BAG"), socketID);
@@ -310,6 +324,7 @@ void MerchantTurnState::handleGiveBag(Game *curGame, const Json::Value& jsonMess
     }
     curPlayer.setState(PLAYER_RECEIVE_CARDS);
 
+    /* TODO: getName of socketID == PlayerName of Bag -> Send MERCHANT_GIVE_BAG_RESPONSE. Otherwise MERCHANT_GIVE_BAG */
     Json::Value bagResponseAll;
     bagResponseAll["MessageType"] = "MERCHANT_GIVE_BAG";
     bagResponseAll["PlayerName"] = curPlayer.getName();

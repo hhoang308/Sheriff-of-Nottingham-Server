@@ -229,24 +229,26 @@ bool Game::createGameDetails()
 
 bool Game::recreateDeck()
 {
-    if(!mDeck.empty())
+    if (!mDeck.empty())
     {
         LOG(ERROR, "mDeck isn't empty");
         return false;
     }
 
-    if(mLeftPile.size() + mRightPile.size() <= 10)
+    if (mLeftPile.size() + mRightPile.size() <= 10)
     {
         LOG(ERROR, "mLeftPile and mRightPile dont have enough cards");
         return false;
     }
 
-    while(!mLeftPile.empty()){
+    while (!mLeftPile.empty())
+    {
         mDeck.emplace_back(mLeftPile.back());
         mLeftPile.pop_back();
     }
 
-    while(!mRightPile.empty()){
+    while (!mRightPile.empty())
+    {
         mDeck.emplace_back(mRightPile.back());
         mRightPile.pop_back();
     }
@@ -483,13 +485,13 @@ void Game::calculatePoints()
 
     /* Calculate points from Illegal Cards */
     const std::vector<CardName> illegalCardList = {PEPPER, MEAD, SILK, CROSSBOW};
-    for(const CardName &card : illegalCardList)
+    for (const CardName &card : illegalCardList)
     {
         for (auto &player : mPlayers)
         {
             for (auto &good : player.second->getGoods())
             {
-                if(good.first == card && good.second > 0)
+                if (good.first == card && good.second > 0)
                 {
                     player.second->addPlayerPoints(cardValue.at(card) * good.second);
                 }
@@ -747,10 +749,12 @@ Bag &Game::getBag()
     return mBag;
 }
 
-bool Game::setBag(std::vector<CardName> &bagCards, const std::string bribe, const CardName declared, const std::string owner, const int ownerSocketID)
+bool Game::setBag(std::vector<CardName> &bagCards, const std::string moneyBribe, const std::string cardBribe, const int cardBribeAmount, const CardName declared, const std::string owner, const int ownerSocketID)
 {
-    mBag.mBagBribe = bribe;
+    mBag.mBagMoneyBribe = moneyBribe;
     mBag.mBagDeclared = declared;
+    mBag.mBagCardBribe = cardBribe;
+    mBag.mBagCardBribeAmount = cardBribeAmount;
     mBag.mBagCards = bagCards;
     mBag.mBagOwner = owner;
     mBag.mBagOwnerSocketID = ownerSocketID;
@@ -763,7 +767,7 @@ bool Game::setBag(std::vector<CardName> &bagCards, const std::string bribe, cons
     bagCardsString.pop_back();
     bagCardsString.pop_back();
 
-    LOG(INFO, "Bag's info: mBagBribe %d, mBagDeclared %s, mBagCards [%s], mBagOwner %s", stoi(bribe), cardNameToString.at(declared).c_str(), bagCardsString.c_str(), owner.c_str());
+    LOG(INFO, "Bag's info: mBagMoneyBribe %d, mBagCardBribe %s, mBagCardBribeAmount %d, mBagDeclared %s, mBagCards [%s], mBagOwner %s", stoi(moneyBribe), cardBribe.c_str(), cardBribeAmount, cardNameToString.at(declared).c_str(), bagCardsString.c_str(), owner.c_str());
 #endif
     return true;
 }
@@ -774,14 +778,24 @@ bool Game::clearBag()
     return true;
 }
 
-void Game::calculatePenalty(const int sheriffSocketID, Bag &bag, bool isPass)
+/**
+ * @brief Calculate the penalty for Sheriff and Merchant
+ *
+ * @param sheriffSocketID
+ * @param bag
+ * @param isPass
+ * @return greater than 0 if Sheriff passes bag or -1 if Sheriff checks bag
+ *
+ */
+int Game::calculatePenalty(const int sheriffSocketID, Bag &bag, bool isPass)
 {
     if (bag.isEmpty())
     {
         LOG(ERROR, "Invalid bag");
-        return;
+        return -1;
     }
 
+    int bribedGoodReceiveAmount = 0;
     int bagOwnerSocketID = bag.mBagOwnerSocketID;
     Player &bagOwnerPlayer = getPlayer(bagOwnerSocketID);
     Player &sheriffPlayer = getPlayer(sheriffSocketID);
@@ -789,12 +803,21 @@ void Game::calculatePenalty(const int sheriffSocketID, Bag &bag, bool isPass)
     if (isPass)
     {
         /* Sheriff receives money and passes this bag */
-        bagOwnerPlayer.subtractGold(stoi(bag.mBagBribe));
+        bagOwnerPlayer.subtractGold(stoi(bag.mBagMoneyBribe));
         for (const auto &card : bag.mBagCards)
         {
             bagOwnerPlayer.addCardToGoods(card);
         }
-        sheriffPlayer.addGold(stoi(bag.mBagBribe));
+        for (int i = 0; i < bag.mBagCardBribeAmount; i++)
+        {
+            if (bagOwnerPlayer.removeCardFromGoods(stringToCardName.at(bag.mBagCardBribe)))
+            {
+                bribedGoodReceiveAmount++;
+                sheriffPlayer.addCardToGoods(stringToCardName.at(bag.mBagCardBribe));
+            }
+        }
+        sheriffPlayer.addGold(stoi(bag.mBagMoneyBribe));
+        return bribedGoodReceiveAmount;
     }
     else
     {
@@ -814,12 +837,15 @@ void Game::calculatePenalty(const int sheriffSocketID, Bag &bag, bool isPass)
             }
         }
     }
+    return -1;
 }
 
 bool Bag::clearBag()
 {
     mBagCards.clear();
-    mBagBribe = "0";
+    mBagMoneyBribe = "0";
+    mBagCardBribe = "";
+    mBagCardBribeAmount = 0;
     mBagOwner = "";
     mBagDeclared = INVALID_CARD;
     return true;
@@ -844,7 +870,7 @@ bool Game::tradeContrabandToCards(const int socketID)
         if (player.getGoods().count(card) > 0 && player.getGoods().at(card) >= CONTRABAND_TO_MARKET_CARDS_LIMIT)
         {
             int blackMarketCard = getBlackMarketCards(card);
-            if(blackMarketCard == 0)
+            if (blackMarketCard == 0)
             {
                 return false;
             }

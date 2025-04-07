@@ -18,7 +18,7 @@ TEST(checkBagTest, TestSheriffCheck)
     int merchantSocketID = 1;
 
     std::vector<CardName> merchantCards = {CHICKEN, CHICKEN, SILK, SILK, SILK};
-    curGame->setBag(merchantCards, "5", CHICKEN, "Player 1", merchantSocketID);
+    curGame->setBag(merchantCards, "5", "", 0, CHICKEN, "Player 1", merchantSocketID);
     Bag curBag = curGame->getBag();
 
     curGame->calculatePenalty(sheriffSocketID, curBag, false);
@@ -44,7 +44,7 @@ TEST(checkBagTest, TestSheriffPass)
 
     std::vector<CardName> merchantCards = {CHICKEN, CHICKEN, APPLE, PEPPER, SILK};
     std::string bribe = "5";
-    curGame->setBag(merchantCards, bribe, CHICKEN, "Player 1", merchantSocketID);
+    curGame->setBag(merchantCards, bribe, "", 0, CHICKEN, "Player 1", merchantSocketID);
     Bag curBag = curGame->getBag();
 
     curGame->calculatePenalty(sheriffSocketID, curBag, true);

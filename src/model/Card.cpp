@@ -1,5 +1,7 @@
 #include "Card.h"
 
+/* TODO: Add function to undercase words -> avoid typepo */
+
 const std::unordered_map<CardName, std::string> cardNameToString = {
     {APPLE, "Apple"},
     {CHEESE, "Cheese"},
