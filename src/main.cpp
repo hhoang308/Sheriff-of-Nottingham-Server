@@ -8,10 +8,10 @@
 #include <iostream>
 #include <Log.h>
 
-
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[])
+{
     LOG(INFO, "Welcome to Sheriff of Nottingham!");
-    Server& server = Server::getInstance();
+    Server &server = Server::getInstance();
     server.start();
     // int numberOfPlayer = 3;
     // Game* currentGame = new Game(numberOfPlayer);

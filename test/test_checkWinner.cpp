@@ -23,17 +23,17 @@ TEST(checkWinnerTest, TestKingQueenChicken)
     int player3_id = 2;
     int player4_id = 3;
 
-    Player& player1 = curGame->getPlayer(player1_id);
-    Player& player2 = curGame->getPlayer(player2_id);
-    Player& player3 = curGame->getPlayer(player3_id);
-    Player& player4 = curGame->getPlayer(player4_id);
+    Player &player1 = curGame->getPlayer(player1_id);
+    Player &player2 = curGame->getPlayer(player2_id);
+    Player &player3 = curGame->getPlayer(player3_id);
+    Player &player4 = curGame->getPlayer(player4_id);
 
-    for(int i = 1; i <= MAX_CARD; i++)
+    for (int i = 1; i <= MAX_CARD; i++)
     {
         player1.addCardToGoods(CHICKEN);
     }
 
-    for(int i = 1; i <= SECOND_MAX_CARD; i++)
+    for (int i = 1; i <= SECOND_MAX_CARD; i++)
     {
         player2.addCardToGoods(CHICKEN);
     }
@@ -63,25 +63,24 @@ TEST(checkWinnerTest, TestKingKingChicken)
     int player3_id = 2;
     int player4_id = 3;
 
-    Player& player1 = curGame->getPlayer(player1_id);
-    Player& player2 = curGame->getPlayer(player2_id);
-    Player& player3 = curGame->getPlayer(player3_id);
-    Player& player4 = curGame->getPlayer(player4_id);
+    Player &player1 = curGame->getPlayer(player1_id);
+    Player &player2 = curGame->getPlayer(player2_id);
+    Player &player3 = curGame->getPlayer(player3_id);
+    Player &player4 = curGame->getPlayer(player4_id);
 
-    for(int i = 1; i <= MAX_CARD; i++)
+    for (int i = 1; i <= MAX_CARD; i++)
     {
         player1.addCardToGoods(CHICKEN);
     }
 
-    for(int i = 1; i <= MAX_CARD; i++)
+    for (int i = 1; i <= MAX_CARD; i++)
     {
         player2.addCardToGoods(CHICKEN);
     }
 
     curGame->calculatePoints();
 
-
-    int sharedBonus = (bonusPointsChampion.at(CHICKEN) + bonusPointRunnerUp.at(CHICKEN))/ 2;
+    int sharedBonus = (bonusPointsChampion.at(CHICKEN) + bonusPointRunnerUp.at(CHICKEN)) / 2;
 
     EXPECT_EQ(player1.getPlayerPoints(), 50 + cardValue.at(CHICKEN) * MAX_CARD + sharedBonus);
     EXPECT_EQ(player2.getPlayerPoints(), 50 + cardValue.at(CHICKEN) * MAX_CARD + sharedBonus);
@@ -106,22 +105,22 @@ TEST(checkWinnerTest, TestKingQueenQueenChicken)
     int player3_id = 2;
     int player4_id = 3;
 
-    Player& player1 = curGame->getPlayer(player1_id);
-    Player& player2 = curGame->getPlayer(player2_id);
-    Player& player3 = curGame->getPlayer(player3_id);
-    Player& player4 = curGame->getPlayer(player4_id);
+    Player &player1 = curGame->getPlayer(player1_id);
+    Player &player2 = curGame->getPlayer(player2_id);
+    Player &player3 = curGame->getPlayer(player3_id);
+    Player &player4 = curGame->getPlayer(player4_id);
 
-    for(int i = 1; i <= MAX_CARD; i++)
+    for (int i = 1; i <= MAX_CARD; i++)
     {
         player1.addCardToGoods(CHICKEN);
     }
 
-    for(int i = 1; i <= SECOND_MAX_CARD; i++)
+    for (int i = 1; i <= SECOND_MAX_CARD; i++)
     {
         player2.addCardToGoods(CHICKEN);
     }
 
-    for(int i = 1; i <= SECOND_MAX_CARD; i++)
+    for (int i = 1; i <= SECOND_MAX_CARD; i++)
     {
         player3.addCardToGoods(CHICKEN);
     }
@@ -153,27 +152,27 @@ TEST(checkWinnerTest, TestKingQueenQueenQueenChicken)
     int player3_id = 2;
     int player4_id = 3;
 
-    Player& player1 = curGame->getPlayer(player1_id);
-    Player& player2 = curGame->getPlayer(player2_id);
-    Player& player3 = curGame->getPlayer(player3_id);
-    Player& player4 = curGame->getPlayer(player4_id);
+    Player &player1 = curGame->getPlayer(player1_id);
+    Player &player2 = curGame->getPlayer(player2_id);
+    Player &player3 = curGame->getPlayer(player3_id);
+    Player &player4 = curGame->getPlayer(player4_id);
 
-    for(int i = 1; i <= MAX_CARD; i++)
+    for (int i = 1; i <= MAX_CARD; i++)
     {
         player1.addCardToGoods(CHICKEN);
     }
 
-    for(int i = 1; i <= SECOND_MAX_CARD; i++)
+    for (int i = 1; i <= SECOND_MAX_CARD; i++)
     {
         player2.addCardToGoods(CHICKEN);
     }
 
-    for(int i = 1; i <= SECOND_MAX_CARD; i++)
+    for (int i = 1; i <= SECOND_MAX_CARD; i++)
     {
         player3.addCardToGoods(CHICKEN);
     }
 
-    for(int i = 1; i <= SECOND_MAX_CARD; i++)
+    for (int i = 1; i <= SECOND_MAX_CARD; i++)
     {
         player4.addCardToGoods(CHICKEN);
     }
@@ -205,22 +204,22 @@ TEST(checkWinnerTest, TestKingKingKingChicken)
     int player3_id = 2;
     int player4_id = 3;
 
-    Player& player1 = curGame->getPlayer(player1_id);
-    Player& player2 = curGame->getPlayer(player2_id);
-    Player& player3 = curGame->getPlayer(player3_id);
-    Player& player4 = curGame->getPlayer(player4_id);
+    Player &player1 = curGame->getPlayer(player1_id);
+    Player &player2 = curGame->getPlayer(player2_id);
+    Player &player3 = curGame->getPlayer(player3_id);
+    Player &player4 = curGame->getPlayer(player4_id);
 
-    for(int i = 1; i <= MAX_CARD; i++)
+    for (int i = 1; i <= MAX_CARD; i++)
     {
         player1.addCardToGoods(CHICKEN);
     }
 
-    for(int i = 1; i <= MAX_CARD; i++)
+    for (int i = 1; i <= MAX_CARD; i++)
     {
         player2.addCardToGoods(CHICKEN);
     }
 
-    for(int i = 1; i <= MAX_CARD; i++)
+    for (int i = 1; i <= MAX_CARD; i++)
     {
         player3.addCardToGoods(CHICKEN);
     }
@@ -252,12 +251,12 @@ TEST(checkWinnerTest, TestKingChicken)
     int player3_id = 2;
     int player4_id = 3;
 
-    Player& player1 = curGame->getPlayer(player1_id);
-    Player& player2 = curGame->getPlayer(player2_id);
-    Player& player3 = curGame->getPlayer(player3_id);
-    Player& player4 = curGame->getPlayer(player4_id);
+    Player &player1 = curGame->getPlayer(player1_id);
+    Player &player2 = curGame->getPlayer(player2_id);
+    Player &player3 = curGame->getPlayer(player3_id);
+    Player &player4 = curGame->getPlayer(player4_id);
 
-    for(int i = 1; i <= MAX_CARD; i++)
+    for (int i = 1; i <= MAX_CARD; i++)
     {
         player1.addCardToGoods(CHICKEN);
     }
@@ -287,10 +286,10 @@ TEST(checkWinnerTest, TestChicken)
     int player3_id = 2;
     int player4_id = 3;
 
-    Player& player1 = curGame->getPlayer(player1_id);
-    Player& player2 = curGame->getPlayer(player2_id);
-    Player& player3 = curGame->getPlayer(player3_id);
-    Player& player4 = curGame->getPlayer(player4_id);
+    Player &player1 = curGame->getPlayer(player1_id);
+    Player &player2 = curGame->getPlayer(player2_id);
+    Player &player3 = curGame->getPlayer(player3_id);
+    Player &player4 = curGame->getPlayer(player4_id);
 
     curGame->calculatePoints();
 

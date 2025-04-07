@@ -3,7 +3,8 @@
 #include <string>
 
 // Test case: Kiểm tra việc parse JSON từ string
-TEST(UtilsJsonTest, ParseJsonFromString) {
+TEST(UtilsJsonTest, ParseJsonFromString)
+{
     std::string inputJson = R"({"messagetype":"PLAYER_READY","name":"Sarah"})";
 
     Json::Value parsedJson = stringToJson(inputJson);
@@ -12,7 +13,8 @@ TEST(UtilsJsonTest, ParseJsonFromString) {
     ASSERT_EQ(parsedJson["name"].asString(), "Sarah");
 }
 
-TEST(UtilsJsonTest, ConvertJsonToString) {
+TEST(UtilsJsonTest, ConvertJsonToString)
+{
     Json::Value jsonObject;
     jsonObject["messagetype"] = "PLAYER_READY";
     jsonObject["name"] = "Sarah";

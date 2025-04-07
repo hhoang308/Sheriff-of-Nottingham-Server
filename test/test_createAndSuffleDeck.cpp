@@ -114,7 +114,8 @@ TEST(createGameDetailsTest, testRecreateDeckSuccess1)
 
     (void)curGame->createGameDetails();
 
-    while(!curGame->getDeck().empty()){
+    while (!curGame->getDeck().empty())
+    {
         curGame->insertPile(curGame->withdrawDeck(), LEFT_PILE);
     }
     EXPECT_TRUE(curGame->recreateDeck());
@@ -136,7 +137,8 @@ TEST(createGameDetailsTest, testRecreateDeckSuccess2)
 
     (void)curGame->createGameDetails();
 
-    while(!curGame->getDeck().empty()){
+    while (!curGame->getDeck().empty())
+    {
         curGame->insertPile(curGame->withdrawDeck(), RIGHT_PILE);
     }
     EXPECT_TRUE(curGame->recreateDeck());
@@ -158,9 +160,10 @@ TEST(createGameDetailsTest, testRecreateDeckSuccess3)
 
     (void)curGame->createGameDetails();
 
-    while(!curGame->getDeck().empty()){
+    while (!curGame->getDeck().empty())
+    {
         curGame->insertPile(curGame->withdrawDeck(), RIGHT_PILE);
-        if(!curGame->getDeck().empty())
+        if (!curGame->getDeck().empty())
         {
             curGame->insertPile(curGame->withdrawDeck(), LEFT_PILE);
         }
@@ -199,12 +202,12 @@ TEST(createGameDetailsTest, testRecreateDeckFail2)
 
     (void)curGame->createGameDetails();
 
-    while(!curGame->getDeck().empty()){
+    while (!curGame->getDeck().empty())
+    {
         CardName card = curGame->withdrawDeck();
     }
     EXPECT_FALSE(curGame->recreateDeck());
 }
-
 
 TEST(createGameDetailsTest, testRecreateDeckFail3)
 {
@@ -219,7 +222,8 @@ TEST(createGameDetailsTest, testRecreateDeckFail3)
 
     (void)curGame->createGameDetails();
 
-    while(curGame->getDeck().size() > 1){
+    while (curGame->getDeck().size() > 1)
+    {
         CardName card = curGame->withdrawDeck();
     }
     EXPECT_FALSE(curGame->recreateDeck());
