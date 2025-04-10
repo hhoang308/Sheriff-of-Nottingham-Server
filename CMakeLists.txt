@@ -28,6 +28,7 @@ set(SERVER_SOURCES
     src/state/RoundStartedState.cpp
     src/state/SheriffTurnState.cpp
     src/state/WaitingForPlayersState.cpp
+    src/model/MessageQueue.cpp
     external/json/jsoncpp.cpp
 )
 

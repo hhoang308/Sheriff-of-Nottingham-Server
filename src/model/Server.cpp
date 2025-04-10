@@ -73,6 +73,7 @@ void Server::start()
 {
     if (!init())
         return;
+    startMessageDispatcher();
     std::thread(&Server::acceptClient, this).detach();
 
     while (mServerState == SERVER_READY)
@@ -85,6 +86,7 @@ void Server::stop()
 {
     mServerState = SERVER_WAITING;
     LOG(INFO, "Server is stopping");
+    stopDispatcher();
     close(mServerSocket);
 
     std::lock_guard<std::mutex> lock(mClientMutex);
@@ -219,33 +221,12 @@ void Server::addSocketIDToGame(const int socketID, const int gameID)
     mSocketIDToGame[socketID] = gameID;
 }
 
-void Server::sendToClient(const std::string &message, const int socketID)
+void Server::sendToClientInternal(const std::string &message, const int socketID)
 {
     LOG(INFO, "Sending message to player %d: %s", socketID, message.c_str());
     if (send(socketID, message.c_str(), message.size(), 0) < 0)
     {
         LOG(ERROR, "Send failed");
-    }
-}
-
-void Server::sendToAll(const std::string &message)
-{
-    std::lock_guard<std::mutex> lock(mClientMutex);
-    for (const auto &pair : mSocketIDToGame)
-    {
-        sendToClient(message, pair.first);
-    }
-}
-
-void Server::sendToAllExcept(const std::string &message, const int socketID)
-{
-    std::lock_guard<std::mutex> lock(mClientMutex);
-    for (const auto &pair : mSocketIDToGame)
-    {
-        if (pair.first != socketID)
-        {
-            sendToClient(message, pair.first);
-        }
     }
 }
 
@@ -279,4 +260,51 @@ void Server::closeConnection(const int socketID)
     }
     shutdown(socketID, SHUT_RDWR);
     close(socketID);
+}
+
+void Server::startMessageDispatcher()
+{
+    LOG(DEBUG, "startMessageDispatcher");
+    dispatcherThread = std::thread([this]
+                                   {
+        while (running) {
+            Message msg = messageQueue.pop();
+            sendToClientInternal(msg.content, msg.socketID);
+        } });
+}
+
+void Server::stopDispatcher()
+{
+    running = false;
+    messageQueue.push({"", -1});
+    if (dispatcherThread.joinable())
+    {
+        dispatcherThread.join();
+    }
+}
+
+void Server::sendToClient(const std::string &message, int socketID)
+{
+    messageQueue.push({message, socketID});
+}
+
+void Server::sendToAllExcept(const std::string &message, int socketID)
+{
+    std::lock_guard<std::mutex> lock(mClientMutex);
+    for (const auto &pair : mSocketIDToGame)
+    {
+        if (pair.first != socketID)
+        {
+            sendToClient(message, pair.first);
+        }
+    }
+}
+
+void Server::sendToAll(const std::string &message)
+{
+    std::lock_guard<std::mutex> lock(mClientMutex);
+    for (const auto &pair : mSocketIDToGame)
+    {
+        sendToClient(message, pair.first);
+    }
 }
