@@ -15,7 +15,7 @@
 Game::Game(const int gameId) : mGameId(gameId), isBlackMarketCardsApplied(true)
 {
     currentState = new WaitingForPlayersState();
-    printf("Game created! Game ID %d, currentState %s\n", gameId, currentState->getStateName().c_str());
+    LOG(DEBUG, "Game created! Game ID %d, currentState %s\n", gameId, currentState->getStateName().c_str());
 }
 
 /**
@@ -24,7 +24,7 @@ Game::Game(const int gameId) : mGameId(gameId), isBlackMarketCardsApplied(true)
  */
 Game::~Game()
 {
-    printf("Game is deleted!\n");
+    LOG(DEBUG, "Game is deleted!\n");
     delete currentState;
 }
 

@@ -238,15 +238,15 @@ void Server::closeConnection(const int socketID)
     {
         curGame = mGames[mSocketIDToGame[socketID]].get();
     }
-    if (curGame->getPlayerSize() == 1)
-    {
-        LOG(INFO, "All players disconnected, game is over!");
-        mGames.erase(mSocketIDToGame[socketID]);
-    }
     /* TODO : Find player in all game -> erase their data */
     if (curGame != nullptr)
     {
-        if (curGame->isPlayerExists(socketID))
+        if (curGame->getPlayerSize() == 1)
+        {
+            LOG(INFO, "All players disconnected, game is over!");
+            mGames.erase(mSocketIDToGame[socketID]);
+        }
+        else if (curGame->isPlayerExists(socketID))
         {
             Json::Value message;
             message["MessageType"] = "GAME_DISCONNECT_PLAYER";
