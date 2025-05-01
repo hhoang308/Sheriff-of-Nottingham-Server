@@ -471,7 +471,7 @@ void Game::calculatePoints()
                     }
                 }
             }
-            else /* 1 Queen */
+            else if (queenCount == 1) /* 1 Queen */
             {
                 for (auto &player : mPlayers)
                 {
