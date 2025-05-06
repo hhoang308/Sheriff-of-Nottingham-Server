@@ -23,8 +23,8 @@ TEST(checkBagTest, TestSheriffCheck)
 
     curGame->calculatePenalty(sheriffSocketID, curBag, false);
 
-    EXPECT_EQ(curGame->getPlayer(merchantSocketID).getGold(), 50 - cardPenalty.at(SILK) * 3 + cardPenalty.at(CHICKEN) * 2);
-    EXPECT_EQ(curGame->getPlayer(sheriffSocketID).getGold(), 50 + cardPenalty.at(SILK) * 3 - cardPenalty.at(CHICKEN) * 2);
+    EXPECT_EQ(curGame->getPlayer(merchantSocketID).getGold(), 50 - cardPenalty.at(SILK) * 3);
+    EXPECT_EQ(curGame->getPlayer(sheriffSocketID).getGold(), 50 + cardPenalty.at(SILK) * 3);
     EXPECT_EQ(curGame->getPlayer(merchantSocketID).getGoods().at(CHICKEN), 2);
 }
 

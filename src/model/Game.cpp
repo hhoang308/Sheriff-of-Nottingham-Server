@@ -829,19 +829,29 @@ int Game::calculatePenalty(const int sheriffSocketID, Bag &bag, bool isPass)
     else
     {
         /* Sheriff wants to check the bag */
+        bool isBluff = false;
+        int sheriffPenalty = 0;
+        int bagOwnerPenalty = 0;
         for (const auto &card : bag.mBagCards)
         {
             if (card != bag.mBagDeclared)
             {
-                sheriffPlayer.addGold(cardPenalty.at(card));
-                bagOwnerPlayer.subtractGold(cardPenalty.at(card));
+                isBluff = true;
+                bagOwnerPenalty += cardPenalty.at(card);
             }
             else
             {
-                sheriffPlayer.subtractGold(cardPenalty.at(card));
-                bagOwnerPlayer.addGold(cardPenalty.at(card));
+                sheriffPenalty += cardPenalty.at(card);
                 bagOwnerPlayer.addCardToGoods(card);
             }
+        }
+
+        if(isBluff){
+            sheriffPlayer.addGold(bagOwnerPenalty);
+            bagOwnerPlayer.subtractGold(bagOwnerPenalty);
+        }else{
+            sheriffPlayer.subtractGold(sheriffPenalty);
+            bagOwnerPlayer.addGold(sheriffPenalty);
         }
     }
     return -1;
