@@ -11,10 +11,7 @@ class Game;
 class GameState
 {
 public:
-    virtual ~GameState()
-    {
-        std::cout << "GameState destructor called" << std::endl;
-    };
+    virtual ~GameState(){};
     virtual std::string getStateName() const = 0;
 
     virtual void enterState(Game *server) = 0;
