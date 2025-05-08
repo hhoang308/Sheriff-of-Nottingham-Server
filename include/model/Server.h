@@ -12,8 +12,6 @@
 #include <json/json.h>
 #include "Game.h"
 #include "GameState.h"
-#include "MessageQueue.h"
-#include <atomic>
 
 #define SERVER_PORT 8080
 #define MAX_CLIENTS 1000
@@ -32,17 +30,12 @@ public:
 
     void start();
     void stop();
-    void sendToClientInternal(const std::string &message, const int socketID);
+    void sendToClient(const std::string &message, const int socketID);
+    void sendToAll(const std::string &message);
+    void sendToAllExcept(const std::string &message, const int socketID);
     void closeConnection(const int socketID);
 
     void addSocketIDToGame(const int socketID, const int gameID);
-
-    void startMessageDispatcher();
-    void stopDispatcher();
-
-    void sendToClient(const std::string &message, int socketID);
-    void sendToAll(const std::string &message);
-    void sendToAllExcept(const std::string &message, int socketID);
 
 private:
     Server();
@@ -68,10 +61,6 @@ private:
     std::mutex mSocketIDToGameMutex;
 
     ServerState mServerState;
-
-    std::thread dispatcherThread;
-    std::atomic<bool> running{true};
-    MessageQueue messageQueue;
 };
 
 #endif // SERVER_H
