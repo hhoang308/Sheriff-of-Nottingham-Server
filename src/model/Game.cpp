@@ -144,7 +144,7 @@ bool Game::createGameDetails()
 {
     mNumberOfPlayers = mPlayers.size();
     /* There are 3 players, each player will become sheriff 3 times, otherwise, each player will become sheriff 2 times */
-    mPlayerSheriffTimes = (mNumberOfPlayers == 3) ? mNumberOfPlayers * 3 : mNumberOfPlayers * 2;
+    mPlayerSheriffTimes = (mNumberOfPlayers == 3) ? mNumberOfPlayers * SHERIFF_TIMES_3_PLAYERS : mNumberOfPlayers * SHERIFF_TIMES_MORE_THAN_3_PLAYERS;
     mSheriffIndex = 0;
     if (mNumberOfPlayers < 3 || mNumberOfPlayers > 6)
     {
@@ -846,10 +846,13 @@ int Game::calculatePenalty(const int sheriffSocketID, Bag &bag, bool isPass)
             }
         }
 
-        if(isBluff){
+        if (isBluff)
+        {
             sheriffPlayer.addGold(bagOwnerPenalty);
             bagOwnerPlayer.subtractGold(bagOwnerPenalty);
-        }else{
+        }
+        else
+        {
             sheriffPlayer.subtractGold(sheriffPenalty);
             bagOwnerPlayer.addGold(sheriffPenalty);
         }
