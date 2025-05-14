@@ -109,6 +109,7 @@ void Server::acceptClient()
             perror("Accept failed");
             continue;
         }
+        Game *curGame = nullptr;
         /* TODO: 1 Game in 1 Server, remove when expanding sourcecode multiple games in 1 Server */
         {
             std::lock_guard<std::mutex> lock(mGamesMutex);
@@ -116,15 +117,31 @@ void Server::acceptClient()
             {
                 mGames.emplace(GAME_ID_DEFAULT, std::make_unique<Game>(GAME_ID_DEFAULT));
             }
+            curGame = mGames[GAME_ID_DEFAULT].get();
         }
 
         /* Move create player to handleRequest() of Game, refer to https://github.com/hhoang308/Sheriff-of-Nottingham-Server/issues/8 */
         LOG(INFO, "Have a new connection at client_socket %d!", client_socket);
 
-        /* TODO: Change to thread pool to optimize resources */
-        std::lock_guard<std::mutex> lock(mClientMutex);
-        mSocketIDToGame[client_socket] = GAME_ID_DEFAULT;
-        mClientThreads.emplace_back(&Server::handleClient, this, client_socket);
+        /* Check if the game has started */
+        if (curGame->getCurrentState() != "WaitingForPlayersState")
+        {
+            LOG(INFO, "Game has started, can't add player from socket %d", client_socket);
+            Json::Value message;
+            message["MessageType"] = "GAME_REJECT_PLAYER";
+            message["Reason"] = "GAME_STARTED";
+            sendToClient(jsonToString(message), client_socket);
+            shutdown(client_socket, SHUT_RDWR);
+            close(client_socket);
+            continue; // KHÔNG vào handleClient nữa
+        }
+
+        /* Set socket to non-blocking */
+        {
+            std::lock_guard<std::mutex> lock(mClientMutex);
+            mSocketIDToGame[client_socket] = GAME_ID_DEFAULT;
+            mClientThreads.emplace_back(&Server::handleClient, this, client_socket);
+        }
     }
 }
 
@@ -173,18 +190,18 @@ void Server::handleClient(int clientSocket)
             }
         }
 
-        /* Handle the situation player join but the game has started */
-        if (curGame && curGame->getCurrentState() != "WaitingForPlayersState" && mSocketIDToGame.find(clientSocket) == mSocketIDToGame.end())
-        {
-            LOG(INFO, "Game has started, can't add playerName %d", clientSocket);
-            Json::Value message;
-            message["MessageType"] = "GAME_REJECT_PLAYER";
-            message["Reason"] = "GAME_STARTED";
-            sendToClient(jsonToString(message), clientSocket);
-            shutdown(clientSocket, SHUT_RDWR);
-            close(clientSocket);
-            break;
-        }
+        // /* Handle the situation player join but the game has started */
+        // if (curGame && curGame->getCurrentState() != "WaitingForPlayersState" && mSocketIDToGame.find(clientSocket) == mSocketIDToGame.end())
+        // {
+        //     LOG(INFO, "Game has started, can't add playerName %d", clientSocket);
+        //     Json::Value message;
+        //     message["MessageType"] = "GAME_REJECT_PLAYER";
+        //     message["Reason"] = "GAME_STARTED";
+        //     sendToClient(jsonToString(message), clientSocket);
+        //     shutdown(clientSocket, SHUT_RDWR);
+        //     close(clientSocket);
+        //     break;
+        // }
 
         /* TODO: Handle the situation when all players disconect */
         if (valRead == 0)
