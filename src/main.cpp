@@ -7,9 +7,14 @@
 #include <string>
 #include <iostream>
 #include <Log.h>
+#include <filesystem>
+#include <fstream>
 
 int main(int argc, char *argv[])
 {
+    std::filesystem::create_directory("log");
+    std::string filename = getLogFileName();
+    freopen(filename.c_str(), "w", stdout);
     LOG(INFO, "Welcome to Sheriff of Nottingham!");
     Server &server = Server::getInstance();
     server.start();

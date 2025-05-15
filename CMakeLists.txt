@@ -22,6 +22,7 @@ set(SERVER_SOURCES
     src/model/Player.cpp
     src/model/Card.cpp
     src/utils/Utils.cpp
+    src/utils/Log.cpp
     src/state/GameEndedState.cpp
     src/state/GameStartedState.cpp
     src/state/MerchantTurnState.cpp
