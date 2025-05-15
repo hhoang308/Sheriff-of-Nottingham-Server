@@ -1,0 +1,19 @@
+#ifndef CONSTANTS_H
+#define CONSTANTS_H
+
+#define LEFT_PILE 1
+#define RIGHT_PILE 2
+#define MAIN_DECK 3
+
+#define MAX_NUMBER_OF_PLAYER 6
+
+#define SHERIFF_TIMES_3_PLAYERS 3
+#define SHERIFF_TIMES_MORE_THAN_3_PLAYERS 2
+
+#define GAME_ID_DEFAULT 1234
+
+#define SERVER_PORT 8080
+#define MAX_CLIENTS 1000
+#define BUFFER_SIZE 1024
+
+#endif

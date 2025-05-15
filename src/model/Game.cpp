@@ -904,3 +904,8 @@ bool Game::tradeContrabandToCards(const int socketID)
     }
     return false;
 }
+
+int Game::getGameId() const
+{
+    return mGameId;
+}

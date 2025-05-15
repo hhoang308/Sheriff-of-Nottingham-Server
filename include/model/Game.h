@@ -5,6 +5,7 @@
 #include "Player.h"
 #include "GameState.h"
 #include "Server.h"
+#include "Constants.h"
 
 #include <vector>
 #include <algorithm> // for std::shuffle
@@ -16,16 +17,6 @@
 #include <memory>
 #include <list>
 #include <utility>
-
-#define LEFT_PILE 1
-#define RIGHT_PILE 2
-#define MAIN_DECK 3
-
-#define MAX_NUMBER_OF_PLAYER 6
-#define SHERIFF_TIMES_3_PLAYERS 3
-#define SHERIFF_TIMES_MORE_THAN_3_PLAYERS 2
-
-#define GAME_ID_DEFAULT 1234
 
 struct Bag
 {
