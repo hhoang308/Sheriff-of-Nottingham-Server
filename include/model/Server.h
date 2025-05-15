@@ -10,12 +10,10 @@
 #include <unistd.h>
 #include <unordered_map>
 #include <json/json.h>
+#include <atomic>
 #include "Game.h"
 #include "GameState.h"
-
-#define SERVER_PORT 8080
-#define MAX_CLIENTS 1000
-#define BUFFER_SIZE 1024
+#include "Constants.h"
 
 enum ServerState
 {
@@ -30,6 +28,7 @@ public:
 
     void start();
     void stop();
+    void finish(const int gameID = GAME_ID_DEFAULT);
     void sendToClient(const std::string &message, const int socketID);
     void sendToAll(const std::string &message);
     void sendToAllExcept(const std::string &message, const int socketID);
@@ -54,11 +53,14 @@ private:
     std::vector<std::thread> mClientThreads;
     std::mutex mClientMutex;
 
-    std::unordered_map<int, std::unique_ptr<Game>> mGames;
+    std::unordered_map<int, std::shared_ptr<Game>> mGames;
     std::mutex mGamesMutex;
 
     std::unordered_map<int, int> mSocketIDToGame;
     std::mutex mSocketIDToGameMutex;
+
+    std::unordered_map<int, std::atomic<bool>> mClientRunningFlags;
+    std::mutex mClientFlagMutex;
 
     ServerState mServerState;
 };

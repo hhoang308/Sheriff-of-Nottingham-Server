@@ -115,7 +115,7 @@ void Server::acceptClient()
             std::lock_guard<std::mutex> lock(mGamesMutex);
             if (mGames.find(GAME_ID_DEFAULT) == mGames.end())
             {
-                mGames.emplace(GAME_ID_DEFAULT, std::make_unique<Game>(GAME_ID_DEFAULT));
+                mGames.emplace(GAME_ID_DEFAULT, std::make_shared<Game>(GAME_ID_DEFAULT));
             }
             curGame = mGames[GAME_ID_DEFAULT].get();
         }
@@ -140,6 +140,7 @@ void Server::acceptClient()
         {
             std::lock_guard<std::mutex> lock(mClientMutex);
             mSocketIDToGame[client_socket] = GAME_ID_DEFAULT;
+            mClientRunningFlags[client_socket] = true;
             mClientThreads.emplace_back(&Server::handleClient, this, client_socket);
         }
     }
@@ -150,6 +151,15 @@ void Server::handleClient(int clientSocket)
     char buffer[BUFFER_SIZE];
     while (true)
     {
+        {
+            std::lock_guard<std::mutex> lock(mClientFlagMutex);
+            if (!mClientRunningFlags[clientSocket])
+            {
+                LOG(INFO, "Thread for client %d is asked to exit.", clientSocket);
+                break;
+            }
+        }
+
         int valRead = read(clientSocket, buffer, BUFFER_SIZE - 1); /* Ensure space for null-terminator */
         if (valRead < 0)
         {
@@ -181,12 +191,18 @@ void Server::handleClient(int clientSocket)
             break;
         }
 
-        Game *curGame = nullptr;
+        std::shared_ptr<Game> curGame;
         {
             std::lock_guard<std::mutex> lock(mClientMutex);
-            if (mSocketIDToGame.find(clientSocket) != mSocketIDToGame.end())
+            auto it = mSocketIDToGame.find(clientSocket);
+            if (it != mSocketIDToGame.end())
             {
-                curGame = mGames[mSocketIDToGame[clientSocket]].get();
+                std::lock_guard<std::mutex> lock2(mGamesMutex);
+                auto gameIt = mGames.find(it->second);
+                if (gameIt != mGames.end())
+                {
+                    curGame = gameIt->second;
+                }
             }
         }
 
@@ -296,4 +312,44 @@ void Server::closeConnection(const int socketID)
     }
     shutdown(socketID, SHUT_RDWR);
     close(socketID);
+}
+
+void Server::finish(const int gameID)
+{
+    std::lock_guard<std::mutex> lock(mGamesMutex);
+    if (mGames.find(gameID) == mGames.end())
+    {
+        LOG(ERROR, "Game with ID %d not found", gameID);
+        return;
+    }
+    Game *curGame = mGames[gameID].get();
+
+    LOG(INFO, "Finishing game with ID %d", gameID);
+    {
+        std::lock_guard<std::mutex> clientLock(mClientMutex);
+        for (auto it = mSocketIDToGame.begin(); it != mSocketIDToGame.end();)
+        {
+            if (it->second == gameID)
+            {
+                LOG(INFO, "Removing socketID %d from game %d", it->first, gameID);
+                {
+                    std::lock_guard<std::mutex> lock(mClientFlagMutex);
+                    if (mClientRunningFlags.find(it->first) != mClientRunningFlags.end())
+                    {
+                        mClientRunningFlags[it->first] = false;
+                    }
+                }
+                shutdown(it->first, SHUT_RDWR);
+                close(it->first);
+                it = mSocketIDToGame.erase(it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
+    }
+
+    mGames.erase(gameID);
+    LOG(INFO, "Game with ID %d has been removed", gameID);
 }

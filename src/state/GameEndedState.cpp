@@ -39,6 +39,7 @@ void GameEndedState::enterState(Game *curGame)
     endGameMessage["MessageType"] = "GAME_END";
     /* TODO: change state of all players and disconnect all of them */
     curGame->sendMessageToAll(jsonToString(endGameMessage));
+    Server::getInstance().finish(curGame->getGameId());
 }
 
 std::string GameEndedState::getStateName() const
