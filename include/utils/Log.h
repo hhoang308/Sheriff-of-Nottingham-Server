@@ -2,6 +2,7 @@
 #define LOG_H
 
 #include <cstdio>
+#include <string>
 
 enum LogLevel
 {
@@ -46,5 +47,7 @@ inline const std::string getFileName(const std::string &filePath)
         return filePath.substr(pos + 1);
     return filePath;
 }
+
+const std::string getLogFileName();
 
 #endif // LOG_H

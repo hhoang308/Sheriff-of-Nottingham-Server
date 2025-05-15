@@ -160,6 +160,7 @@ void Server::handleClient(int clientSocket)
             }
         }
 
+        memset(buffer, 0, BUFFER_SIZE);
         int valRead = read(clientSocket, buffer, BUFFER_SIZE - 1); /* Ensure space for null-terminator */
         if (valRead < 0)
         {
