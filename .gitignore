@@ -2,3 +2,6 @@ build/
 googletest/
 .vscode/*
 !.vscode/settings.json
+bot/.env
+bot/build/
+log/
