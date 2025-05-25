@@ -242,41 +242,62 @@ bool Game::recreateDeck()
         return false;
     }
 
-    if (mLeftPile.size() + mRightPile.size() <= 10)
+    int appleCount = 48;
+    int cheeseCount = 36;
+    int breadCount = 36;
+    int chickenCount = 24;
+
+    int meadCount = 21;
+    int silkCount = 12;
+    int crossbowCount = 5;
+    int pepperCount = 22;
+
+    if (mNumberOfPlayers == 3)
     {
-        LOG(ERROR, "mLeftPile and mRightPile dont have enough cards");
-        return false;
+        breadCount -= 36;
+        pepperCount -= 4;
+        meadCount -= 5;
+        silkCount -= 3;
     }
 
-    while (!mLeftPile.empty())
+    // Add cards to the deck
+    for (int i = 0; i < appleCount; ++i)
     {
-        mDeck.emplace_back(mLeftPile.back());
-        mLeftPile.pop_back();
+        mDeck.emplace_back(CardName::APPLE);
     }
-
-    while (!mRightPile.empty())
+    for (int i = 0; i < cheeseCount; ++i)
     {
-        mDeck.emplace_back(mRightPile.back());
-        mRightPile.pop_back();
+        mDeck.emplace_back(CardName::CHEESE);
+    }
+    for (int i = 0; i < breadCount; ++i)
+    {
+        mDeck.emplace_back(CardName::BREAD);
+    }
+    for (int i = 0; i < chickenCount; ++i)
+    {
+        mDeck.emplace_back(CardName::CHICKEN);
+    }
+    for (int i = 0; i < pepperCount; ++i)
+    {
+        mDeck.emplace_back(CardName::PEPPER);
+    }
+    for (int i = 0; i < meadCount; ++i)
+    {
+        mDeck.emplace_back(CardName::MEAD);
+    }
+    for (int i = 0; i < silkCount; ++i)
+    {
+        mDeck.emplace_back(CardName::SILK);
+    }
+    for (int i = 0; i < crossbowCount; ++i)
+    {
+        mDeck.emplace_back(CardName::CROSSBOW);
     }
 
     // Shuffle the deck
     std::random_device rd;
     std::mt19937 g(rd());
     std::shuffle(mDeck.begin(), mDeck.end(), g);
-
-    // Take 5 random cards for mLeftPile and mRightPile
-    for (int i = 0; i < 5; ++i)
-    {
-        mLeftPile.push_back(mDeck.back());
-        mDeck.pop_back();
-    }
-
-    for (int i = 0; i < 5; ++i)
-    {
-        mRightPile.push_back(mDeck.back());
-        mDeck.pop_back();
-    }
 
     return true;
 }
@@ -286,8 +307,12 @@ CardName Game::withdrawDeck()
     std::lock_guard<std::mutex> lock(mDeckMutex);
     if (mDeck.empty())
     {
-        printf("mDeck is empty, can't withdraw!\n");
-        return INVALID_CARD;
+        if (!recreateDeck())
+        {
+            LOG(ERROR, "Recreate deck failed!");
+            return INVALID_CARD;
+        }
+        LOG(INFO, "mDeck is replenished!");
     }
     CardName topCardOfDeck = mDeck.back();
     LOG(DEBUG, "Withdraw Deck %s", cardNameToString.at(topCardOfDeck).c_str());
